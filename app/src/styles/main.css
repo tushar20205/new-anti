@@ -1,0 +1,256 @@
+/* ═══════════════════════════════════════════════════
+   SkillSwap+ — Design System & Global Styles
+   ═══════════════════════════════════════════════════ */
+
+/* ─── Base ─────────────────────────────────── */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Inter', sans-serif; }
+
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined', sans-serif;
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+  vertical-align: middle;
+  display: inline-block;
+}
+.material-fill {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+}
+
+/* ─── Page Transitions ─────────────────────── */
+.page-enter {
+  animation: fadeIn 150ms ease-out forwards;
+}
+.page-exit {
+  animation: fadeOut 150ms ease-in forwards;
+}
+
+/* ─── Modal Animations ─────────────────────── */
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: 150;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: fadeIn 200ms ease-out;
+}
+.modal-content {
+  animation: modalIn 250ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.9) translateY(10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0);      }
+}
+@keyframes fadeIn {
+  from { opacity: 0; } to { opacity: 1; }
+}
+@keyframes fadeOut {
+  from { opacity: 1; } to { opacity: 0; }
+}
+
+/* ─── Toast Animations ─────────────────────── */
+.toast-enter {
+  animation: toastSlideIn 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.toast-exit {
+  animation: toastSlideOut 200ms ease-in forwards;
+}
+@keyframes toastSlideIn {
+  from { opacity: 0; transform: translateX(100px); }
+  to   { opacity: 1; transform: translateX(0);     }
+}
+@keyframes toastSlideOut {
+  from { opacity: 1; transform: translateX(0);     }
+  to   { opacity: 0; transform: translateX(100px); }
+}
+
+/* ─── Booking Panel ────────────────────────── */
+.booking-panel {
+  position: fixed; right: 0; top: 0; height: 100%;
+  z-index: 60;
+  transform: translateX(100%);
+  transition: transform 500ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+.booking-panel.open {
+  transform: translateX(0);
+}
+.booking-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(4px);
+  z-index: 55;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 400ms ease;
+}
+.booking-overlay.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ─── Glassmorphism ────────────────────────── */
+.glass-card {
+  background: rgba(255, 255, 255, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+.glass-panel {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* ─── Sidebar ──────────────────────────────── */
+.sidebar-link {
+  display: flex; align-items: center; gap: 0.75rem;
+  padding: 0.625rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  color: rgba(28, 27, 27, 0.6);
+  transition: all 200ms ease;
+  cursor: pointer;
+  text-decoration: none;
+}
+.sidebar-link:hover {
+  background: rgba(255,255,255,0.3);
+  color: #1c1b1b;
+}
+.sidebar-link.active {
+  color: #6927ef;
+  font-weight: 600;
+  background: rgba(255,255,255,0.5);
+}
+
+/* ─── Cards ────────────────────────────────── */
+.card-hover {
+  transition: all 300ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 20px 40px rgba(80, 0, 200, 0.06);
+}
+
+/* ─── Button Press ─────────────────────────── */
+.btn-press { transition: all 200ms ease; }
+.btn-press:active { transform: scale(0.95); }
+
+/* ─── Scrollbar ────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #e5e2e1; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #cbc3d9; }
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ─── Tooltip ──────────────────────────────── */
+.tooltip-text {
+  visibility: hidden; opacity: 0;
+  transition: all 200ms ease;
+}
+.tooltip:hover .tooltip-text {
+  visibility: visible; opacity: 1;
+}
+
+/* ─── Tab Underline ────────────────────────── */
+.tab-active {
+  color: #5000c8;
+  border-bottom: 2px solid #5000c8;
+  font-weight: 700;
+}
+.tab-item {
+  transition: all 200ms ease;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+}
+.tab-item:hover { color: #1c1b1b; }
+
+/* ─── Step Indicator ───────────────────────── */
+.step-bubble {
+  width: 2rem; height: 2rem;
+  border-radius: 9999px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 0.75rem; font-weight: 900;
+  transition: all 300ms ease;
+}
+.step-active .step-bubble {
+  background: #5000c8; color: white;
+  box-shadow: 0 0 0 4px rgba(80,0,200,0.1);
+}
+.step-completed .step-bubble {
+  background: #5000c8; color: white; opacity: 0.7;
+}
+.step-pending .step-bubble {
+  background: #f0edec; color: #7a7488;
+}
+
+/* ─── Progress Bar ─────────────────────────── */
+.xp-bar {
+  height: 0.75rem; width: 100%;
+  background: rgba(228, 225, 224, 0.5);
+  border-radius: 9999px;
+  overflow: hidden;
+  border: 1px solid rgba(228, 225, 224, 0.4);
+}
+.xp-bar-fill {
+  height: 100%;
+  background: linear-gradient(to right, #5000c8, #39cdfd);
+  border-radius: 9999px;
+  box-shadow: 0 0 8px rgba(105, 39, 239, 0.3);
+  transition: width 1000ms cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ─── Toggle Switch ────────────────────────── */
+.toggle-switch {
+  width: 44px; height: 24px;
+  background: #e5e2e1; border-radius: 9999px;
+  position: relative; cursor: pointer;
+  transition: background 200ms ease;
+}
+.toggle-switch.on { background: #5000c8; }
+.toggle-switch::after {
+  content: ''; position: absolute;
+  top: 2px; left: 2px;
+  width: 20px; height: 20px;
+  background: white; border-radius: 50%;
+  transition: transform 200ms ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+.toggle-switch.on::after { transform: translateX(20px); }
+
+/* ─── Slide-in from right ──────────────────── */
+@keyframes slideInRight {
+  from { transform: translateX(30px); opacity: 0; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+.slide-in-right { animation: slideInRight 300ms ease-out; }
+
+/* ─── Stagger children ─────────────────────── */
+@keyframes pageSlideIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+.stagger-children > * {
+  opacity: 0;
+  animation: pageSlideIn 300ms ease-out forwards;
+}
+.stagger-children > *:nth-child(1) { animation-delay: 50ms; }
+.stagger-children > *:nth-child(2) { animation-delay: 100ms; }
+.stagger-children > *:nth-child(3) { animation-delay: 150ms; }
+.stagger-children > *:nth-child(4) { animation-delay: 200ms; }
+.stagger-children > *:nth-child(5) { animation-delay: 250ms; }
+.stagger-children > *:nth-child(6) { animation-delay: 300ms; }
+
+/* ─── Countdown pulse ─────────────────────── */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.6; }
+}
+.pulse { animation: pulse 2s ease-in-out infinite; }
+
+/* ─── Gradient text utility ────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, #6927EF, #006782);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
