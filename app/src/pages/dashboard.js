@@ -1,11 +1,9 @@
 /* ═══════════════════════════════════════════
    SkillSwap+ — Dashboard Page
-   Works in both API and Demo mode
    ═══════════════════════════════════════════ */
 
 import { store } from '../state.js';
 import { showToast } from '../components/toast.js';
-import { isDemoMode } from '../services/data.layer.js';
 
 export async function renderDashboard(container) {
   const user = store.get('user');
@@ -41,41 +39,41 @@ export async function renderDashboard(container) {
     </div>
   `;
 
-  // Fetch real data from API (skip in demo mode)
+  // Fetch real data from API
   let upcomingSessions = [];
   let notifications = store.get('notifications') || [];
 
-  if (!isDemoMode()) {
-    try {
-      const { getMySessions } = await import('../services/session.service.js');
-      const { getNotifications } = await import('../services/notification.service.js');
+  try {
+    const { getMySessions } = await import('../services/session.service.js');
+    const { getNotifications } = await import('../services/notification.service.js');
 
-      const [sessionsData, notifData] = await Promise.allSettled([
-        getMySessions(),
-        getNotifications()
-      ]);
+    const [sessionsData, notifData] = await Promise.allSettled([
+      getMySessions(),
+      getNotifications()
+    ]);
 
-      if (sessionsData.status === 'fulfilled') {
-        const { hosting = [], attending = [] } = sessionsData.value;
-        const allSessions = [
-          ...hosting.map(s => ({ ...s, role: 'hosting' })),
-          ...attending.map(s => ({ ...s, role: 'attending' }))
-        ];
-        upcomingSessions = allSessions.filter(s =>
-          s.status === 'open' || s.status === 'full' || s.status === 'upcoming'
-        );
-        store.setSessionsFromAPI(allSessions);
-      }
-
-      if (notifData.status === 'fulfilled') {
-        notifications = notifData.value;
-        store.setNotificationsFromAPI(notifications);
-      }
-    } catch (err) {
-      console.warn('Dashboard data fetch error:', err);
+    if (sessionsData.status === 'fulfilled' && sessionsData.value) {
+      const result = sessionsData.value;
+      const hosting = Array.isArray(result.hosting) ? result.hosting : [];
+      const attending = Array.isArray(result.attending) ? result.attending : [];
+      const allSessions = [
+        ...hosting.map(s => ({ ...s, role: 'hosting' })),
+        ...attending.map(s => ({ ...s, role: 'attending' }))
+      ];
+      upcomingSessions = allSessions.filter(s =>
+        s.status === 'open' || s.status === 'full' || s.status === 'upcoming'
+      );
+      store.setSessionsFromAPI(allSessions);
     }
-  } else {
-    // Demo mode — use sessions from local state
+
+    if (notifData.status === 'fulfilled') {
+      const raw = notifData.value;
+      notifications = Array.isArray(raw) ? raw : [];
+      store.setNotificationsFromAPI(notifications);
+    }
+  } catch (err) {
+    console.warn('Dashboard data fetch error:', err);
+    // Fallback to local state
     upcomingSessions = (store.get('sessions') || []).filter(s =>
       s.status === 'open' || s.status === 'full' || s.status === 'upcoming'
     );
@@ -140,8 +138,8 @@ export async function renderDashboard(container) {
               </div>
               <div class="flex -space-x-1.5">
                 ${userBadges.slice(0, 3).map(b => {
-                  const c = colorMap[b.color] || colorMap.violet;
-                  return `
+    const c = colorMap[b.color] || colorMap.violet;
+    return `
                   <div class="h-7 w-7 rounded-full border-2 border-white flex items-center justify-center shadow-sm" style="background:${c.bg}" title="${b.name || ''}">
                     <span class="material-symbols-outlined text-[11px]" style="color:${c.text}">${b.icon || 'stars'}</span>
                   </div>
@@ -163,27 +161,27 @@ export async function renderDashboard(container) {
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
             ${[
-              {
-                title: 'Advanced Three.js & Shaders',
-                category: 'Development',
-                reason: 'Matches your interest in Creative Coding and recent React completion.',
-                detail: 'Our AI analyzed your 5 most recent workshop completions and identified a growing pattern in WebGL interest.',
-                mentor: 'Elena Volkov',
-                credits: 12,
-                img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBh6hmgK7eJ-VPizGi5r9uMFAQj4H9QakDSA1HyXps7Y-7uBAqKymkY31_2TIiC9Jj1_lB7UtIw5aJDeBeUFQVYDogxvcZBXsR2LEps_vzWZ95O2ze9qCs0STWp0_sFJYxcypFIDFXalMFNBi2ObSstHHW9BjFBGDSlgofEvQqfpm9xTPZC439mnRf6phDfpttVMKAPuny8NJFj22ph2j979TKmnDG3w2CB5r1P-QVscRzQwoCp9UbsNiUnH0mKHWqHD6TFKqAqvQ',
-                mentorImg: 'https://ui-avatars.com/api/?name=Elena+Volkov&background=7c3aed&color=fff'
-              },
-              {
-                title: 'Spatial Design Systems',
-                category: 'UI Design',
-                reason: 'Popular among people with your Skill Profile (Product Designer).',
-                detail: '85% of users with the "Product Designer" tag have added this workshop to their wishlist this week.',
-                mentor: 'Sarah Chen',
-                credits: 8,
-                img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD95xttH7ol9zdnNsaHgkaT_Gsk6XavNkdFTjNN_jq-OfY3FhixNPEUj1kn0k8Uv2KuOHhyvnTtdaVPVlitdlitUynqJNXZrEitDth_C7TmIjlxYU98BrSDA0EZfbQO_pAMIx6eLEIh0dulnG6bpgMr5WW-VkB9ncQebRiTL60SSLyhI8OqLiNdELMZSAaiO3kjbOtgeG_SfNj0pTqx3RMzzSroI14ZUBqgRvhOxCz0-2CjkWdCcGjCr5HQXQbB1XYThrlqU9xU2Q',
-                mentorImg: 'https://ui-avatars.com/api/?name=Sarah+Chen&background=059669&color=fff'
-              }
-            ].map(card => `
+      {
+        title: 'Advanced Three.js & Shaders',
+        category: 'Development',
+        reason: 'Matches your interest in Creative Coding and recent React completion.',
+        detail: 'Our AI analyzed your 5 most recent workshop completions and identified a growing pattern in WebGL interest.',
+        mentor: 'Elena Volkov',
+        credits: 12,
+        img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBh6hmgK7eJ-VPizGi5r9uMFAQj4H9QakDSA1HyXps7Y-7uBAqKymkY31_2TIiC9Jj1_lB7UtIw5aJDeBeUFQVYDogxvcZBXsR2LEps_vzWZ95O2ze9qCs0STWp0_sFJYxcypFIDFXalMFNBi2ObSstHHW9BjFBGDSlgofEvQqfpm9xTPZC439mnRf6phDfpttVMKAPuny8NJFj22ph2j979TKmnDG3w2CB5r1P-QVscRzQwoCp9UbsNiUnH0mKHWqHD6TFKqAqvQ',
+        mentorImg: 'https://ui-avatars.com/api/?name=Elena+Volkov&background=7c3aed&color=fff'
+      },
+      {
+        title: 'Spatial Design Systems',
+        category: 'UI Design',
+        reason: 'Popular among people with your Skill Profile (Product Designer).',
+        detail: '85% of users with the "Product Designer" tag have added this workshop to their wishlist this week.',
+        mentor: 'Sarah Chen',
+        credits: 8,
+        img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD95xttH7ol9zdnNsaHgkaT_Gsk6XavNkdFTjNN_jq-OfY3FhixNPEUj1kn0k8Uv2KuOHhyvnTtdaVPVlitdlitUynqJNXZrEitDth_C7TmIjlxYU98BrSDA0EZfbQO_pAMIx6eLEIh0dulnG6bpgMr5WW-VkB9ncQebRiTL60SSLyhI8OqLiNdELMZSAaiO3kjbOtgeG_SfNj0pTqx3RMzzSroI14ZUBqgRvhOxCz0-2CjkWdCcGjCr5HQXQbB1XYThrlqU9xU2Q',
+        mentorImg: 'https://ui-avatars.com/api/?name=Sarah+Chen&background=059669&color=fff'
+      }
+    ].map(card => `
               <div class="group bg-white rounded-2xl p-6 border border-zinc-100 hover:border-primary/20 hover:shadow-2xl hover:shadow-zinc-200/50 transition-all duration-300">
                 <div class="relative h-44 w-full rounded-xl overflow-hidden mb-5">
                   <img alt="${card.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="${card.img}" />
@@ -244,8 +242,8 @@ export async function renderDashboard(container) {
                   <p class="text-[10px] text-zinc-400 uppercase tracking-widest mt-1">No new alerts</p>
                 </div>
               ` : notifications.slice(0, 4).map(n => {
-                const nc = colorMap[n.color] || colorMap.violet;
-                return `
+      const nc = colorMap[n.color] || colorMap.violet;
+      return `
                 <div class="flex gap-4">
                   <div class="h-10 w-10 rounded-xl flex items-center justify-center shrink-0" style="background:${nc.bg}">
                     <span class="material-symbols-outlined text-lg" style="color:${nc.text}">${n.icon || 'info'}</span>
@@ -274,13 +272,13 @@ export async function renderDashboard(container) {
                 <a href="#/marketplace" class="bg-primary text-white px-6 py-2.5 rounded-full font-bold text-sm hover:scale-105 transition-all shadow-lg shadow-primary/20 btn-press">Schedule a Session</a>
               </div>
             ` : upcomingSessions.map(s => {
-              const hostName = s.host?.name || s.mentor || 'Instructor';
-              const hostAvatar = s.host?.profilePicture || s.mentorAvatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(hostName) + '&background=6927ef&color=fff';
-              const sessionDate = s.date ? new Date(s.date) : new Date();
-              // Generate a meet link from session ID
-              const meetCode = (s._id || s.id || 'abc').replace(/[^a-z0-9]/gi,'').slice(0,12);
-              const meetLink = `https://meet.google.com/skillswap-${meetCode}`;
-              return `
+        const hostName = s.host?.name || s.mentor || 'Instructor';
+        const hostAvatar = s.host?.profilePicture || s.mentorAvatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(hostName) + '&background=6927ef&color=fff';
+        const sessionDate = s.date ? new Date(s.date) : new Date();
+        // Generate a meet link from session ID
+        const meetCode = (s._id || s.id || 'abc').replace(/[^a-z0-9]/gi, '').slice(0, 12);
+        const meetLink = `https://meet.google.com/skillswap-${meetCode}`;
+        return `
               <div class="glass-card rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-6 hover:shadow-xl hover:shadow-zinc-200/30 transition-all group">
                 <div class="flex items-center gap-6 w-full">
                   <div class="h-16 w-16 bg-white/80 rounded-2xl flex flex-col items-center justify-center border border-zinc-100 shrink-0">

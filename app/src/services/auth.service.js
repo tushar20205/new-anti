@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════
    SkillSwap+ — Auth Service
-   Register, login, logout, and token management
+   Register, login, logout, Google OAuth, and token management
    ═══════════════════════════════════════════ */
 
 import api from './api.js';
@@ -40,7 +40,7 @@ export async function register(name, email, password) {
   const res = await api.post('/auth/register', { name, email, password });
   if (res.error) return { error: res.message };
 
-  const { accessToken, refreshToken, user } = res.data;
+  const { accessToken, refreshToken, user } = res.data.data;
 
   // Store tokens
   setTokens(accessToken, refreshToken);
@@ -56,7 +56,25 @@ export async function login(email, password) {
   const res = await api.post('/auth/login', { email, password });
   if (res.error) return { error: res.message };
 
-  const { accessToken, refreshToken, user } = res.data;
+  const { accessToken, refreshToken, user } = res.data.data;
+
+  // Store tokens
+  setTokens(accessToken, refreshToken);
+
+  return { user, accessToken, refreshToken };
+}
+
+/**
+ * Authenticate with Google OAuth.
+ * Sends the Google ID token to the backend for verification.
+ * @param {string} credential - Google ID token from GIS
+ * @returns {{ user, accessToken, refreshToken }}
+ */
+export async function googleLogin(credential) {
+  const res = await api.post('/auth/google', { credential });
+  if (res.error) return { error: res.message };
+
+  const { accessToken, refreshToken, user } = res.data.data;
 
   // Store tokens
   setTokens(accessToken, refreshToken);
@@ -79,7 +97,6 @@ export async function logout() {
   // Always clear local tokens
   removeTokens();
   localStorage.removeItem('skillswap_state');
-  localStorage.removeItem('demo_mode');
 
   // Redirect to landing page
   window.location.hash = '/';

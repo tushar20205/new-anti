@@ -7,7 +7,6 @@
 import { store } from '../state.js';
 import { showToast } from '../components/toast.js';
 import { showModal, closeModal } from '../components/modal.js';
-import { isDemoMode } from '../services/data.layer.js';
 
 // Showcase mentor cards (kept for visual richness)
 const mentors = [
@@ -376,24 +375,6 @@ export async function renderMarketplace(container) {
 async function loadApiSessions() {
   const grid = document.getElementById('api-sessions-grid');
   const countEl = document.getElementById('sessions-count');
-
-  // In demo mode, skip API calls entirely
-  if (isDemoMode()) {
-    if (countEl) countEl.textContent = '0 sessions available';
-    if (grid) {
-      grid.innerHTML = `
-        <div class="col-span-2 text-center py-16 bg-white rounded-2xl border border-zinc-100 shadow-sm flex flex-col items-center justify-center">
-          <div class="w-16 h-16 bg-zinc-50 rounded-full flex items-center justify-center mb-4">
-            <span class="material-symbols-outlined text-3xl text-zinc-400">group_off</span>
-          </div>
-          <h4 class="text-lg font-black text-zinc-900 mb-1">No open community sessions</h4>
-          <p class="text-zinc-500 font-medium text-sm mb-6">In demo mode, browse the curated mentors above. In live mode, community sessions will appear here.</p>
-          <a href="#/mentor-apply" class="bg-primary text-white px-6 py-2.5 rounded-full font-bold text-sm hover:scale-105 transition-all shadow-lg shadow-primary/20 btn-press">Start Teaching</a>
-        </div>
-      `;
-    }
-    return;
-  }
 
   try {
     const { getSessions } = await import('../services/session.service.js');

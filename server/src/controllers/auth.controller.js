@@ -4,6 +4,7 @@
 
 const User = require('../models/User');
 const { generateTokenPair, verifyRefreshToken, generateAccessToken } = require('../services/auth.service');
+const { verifyGoogleToken } = require('../services/google.service');
 const { createNotification } = require('../services/notification.service');
 const catchAsync = require('../utils/catchAsync');
 const AppError = require('../utils/AppError');
@@ -27,6 +28,7 @@ const register = catchAsync(async (req, res, next) => {
     name,
     email,
     password,
+    authProvider: 'local',
     credits: env.DEFAULT_CREDITS
   });
 
@@ -72,7 +74,7 @@ const login = catchAsync(async (req, res, next) => {
   // Find user with password field
   const user = await User.findOne({ email }).select('+password');
 
-  if (!user || !(await user.comparePassword(password))) {
+  if (!user || !user.password || !(await user.comparePassword(password))) {
     return next(new AppError('Incorrect email or password.', 401));
   }
 
@@ -86,6 +88,86 @@ const login = catchAsync(async (req, res, next) => {
   res.status(200).json({
     status: 'success',
     message: 'Logged in successfully',
+    data: {
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        credits: user.credits,
+        role: user.role,
+        profilePicture: user.profilePicture
+      },
+      ...tokens
+    }
+  });
+});
+
+/**
+ * POST /api/auth/google
+ * Authenticate or register a user via Google OAuth.
+ * Accepts { credential } — the Google ID token from frontend GIS.
+ */
+const googleAuth = catchAsync(async (req, res, next) => {
+  const { credential } = req.body;
+
+  if (!credential) {
+    return next(new AppError('Google credential token is required.', 400));
+  }
+
+  // Verify the Google ID token
+  let googleUser;
+  try {
+    googleUser = await verifyGoogleToken(credential);
+  } catch (err) {
+    return next(new AppError('Invalid Google token. Please try again.', 401));
+  }
+
+  const { googleId, email, name, picture } = googleUser;
+
+  // Check if user exists by googleId or email
+  let user = await User.findOne({ $or: [{ googleId }, { email }] });
+  let isNewUser = false;
+
+  if (!user) {
+    // Create new user from Google profile
+    isNewUser = true;
+    user = await User.create({
+      name,
+      email,
+      googleId,
+      authProvider: 'google',
+      profilePicture: picture || '',
+      credits: env.DEFAULT_CREDITS
+    });
+
+    // Welcome notification for new Google users
+    await createNotification(
+      user._id,
+      'system',
+      `Welcome to SkillSwap+! You start with ${env.DEFAULT_CREDITS} credits. Start learning or teaching today!`,
+      'celebration',
+      'emerald'
+    );
+  } else if (!user.googleId) {
+    // Existing email user — link their Google account
+    user.googleId = googleId;
+    user.authProvider = user.authProvider || 'local';
+    if (!user.profilePicture && picture) {
+      user.profilePicture = picture;
+    }
+    await user.save({ validateBeforeSave: false });
+  }
+
+  // Generate tokens
+  const tokens = generateTokenPair(user._id);
+
+  // Store refresh token
+  user.refreshToken = tokens.refreshToken;
+  await user.save({ validateBeforeSave: false });
+
+  res.status(isNewUser ? 201 : 200).json({
+    status: 'success',
+    message: isNewUser ? 'Account created with Google' : 'Logged in with Google',
     data: {
       user: {
         _id: user._id,
@@ -146,4 +228,4 @@ const logout = catchAsync(async (req, res, next) => {
   });
 });
 
-module.exports = { register, login, refreshToken, logout };
+module.exports = { register, login, googleAuth, refreshToken, logout };

@@ -5,9 +5,7 @@
 
 import { store } from '../state.js';
 import { showToast } from '../components/toast.js';
-import { fetchProfile, saveProfile, isDemoMode } from '../services/data.layer.js';
-
-const _isDemoMode = isDemoMode;
+import { fetchProfile, saveProfile } from '../services/data.layer.js';
 
 // Color palette for badges — uses inline styles to avoid Tailwind purge issues
 const colorMap = {

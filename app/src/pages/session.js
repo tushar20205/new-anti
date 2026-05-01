@@ -6,9 +6,7 @@
 
 import { store } from '../state.js';
 import { showToast } from '../components/toast.js';
-import { fetchMySessions, isDemoMode } from '../services/data.layer.js';
-
-const _isDemoMode = isDemoMode;
+import { fetchMySessions } from '../services/data.layer.js';
 
 let countdownInterval = null;
 
