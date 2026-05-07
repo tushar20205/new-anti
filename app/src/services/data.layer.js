@@ -79,6 +79,64 @@ export async function fetchTransactions() {
   }
 }
 
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+//  PRESENTATION FEATURES
+// â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+
+export async function fetchDashboardAnalytics() {
+  try {
+    const { getDashboardAnalytics } = await import('./platform.service.js');
+    return ok(await getDashboardAnalytics());
+  } catch (e) {
+    return fail(e.message || 'Analytics fetch error');
+  }
+}
+
+export async function fetchProjects(query = {}) {
+  try {
+    const { getProjects } = await import('./platform.service.js');
+    return ok(await getProjects(query));
+  } catch (e) {
+    return fail(e.message || 'Projects fetch error');
+  }
+}
+
+export async function fetchResumes() {
+  try {
+    const { getResumes } = await import('./platform.service.js');
+    return ok(await getResumes());
+  } catch (e) {
+    return fail(e.message || 'Resumes fetch error');
+  }
+}
+
+export async function fetchRecommendations(query = {}) {
+  try {
+    const { getRecommendations } = await import('./platform.service.js');
+    return ok(await getRecommendations(query));
+  } catch (e) {
+    return fail(e.message || 'Recommendations fetch error');
+  }
+}
+
+export async function fetchActivity(query = {}) {
+  try {
+    const { getActivity } = await import('./platform.service.js');
+    return ok(await getActivity(query));
+  } catch (e) {
+    return fail(e.message || 'Activity fetch error');
+  }
+}
+
+export async function fetchProfileCompletion() {
+  try {
+    const { getProfileCompletion } = await import('./platform.service.js');
+    return ok(await getProfileCompletion());
+  } catch (e) {
+    return fail(e.message || 'Profile completion fetch error');
+  }
+}
+
 // ═══════════════════════════════════════════
 //  REFERRALS
 // ═══════════════════════════════════════════

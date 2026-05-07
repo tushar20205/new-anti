@@ -42,14 +42,24 @@ export async function renderDashboard(container) {
   // Fetch real data from API
   let upcomingSessions = [];
   let notifications = store.get('notifications') || [];
+  let activities = [];
+  let recommendations = [];
+  let analytics = null;
 
   try {
     const { getMySessions } = await import('../services/session.service.js');
     const { getNotifications } = await import('../services/notification.service.js');
+    const { getDashboardAnalytics, getRecommendations, getActivity } = await import('../services/platform.service.js');
 
     const [sessionsData, notifData] = await Promise.allSettled([
       getMySessions(),
       getNotifications()
+    ]);
+
+    const [analyticsData, recommendationData, activityData] = await Promise.allSettled([
+      getDashboardAnalytics(),
+      getRecommendations({ limit: 4 }),
+      getActivity({ limit: 6 })
     ]);
 
     if (sessionsData.status === 'fulfilled' && sessionsData.value) {
@@ -71,6 +81,16 @@ export async function renderDashboard(container) {
       notifications = Array.isArray(raw) ? raw : [];
       store.setNotificationsFromAPI(notifications);
     }
+
+    if (analyticsData.status === 'fulfilled') {
+      analytics = analyticsData.value;
+    }
+    if (recommendationData.status === 'fulfilled') {
+      recommendations = Array.isArray(recommendationData.value) ? recommendationData.value : [];
+    }
+    if (activityData.status === 'fulfilled') {
+      activities = Array.isArray(activityData.value) ? activityData.value : [];
+    }
   } catch (err) {
     console.warn('Dashboard data fetch error:', err);
     // Fallback to local state
@@ -89,6 +109,45 @@ export async function renderDashboard(container) {
   const userXpMax = displayUser?.xpMax || 1000;
   const userStreak = displayUser?.streak || 0;
   const userBadges = displayUser?.badges || [];
+  const summary = analytics?.summary || {};
+  const completion = summary.profileCompletion ?? analytics?.profileCompletion?.percentage;
+  const activityFeed = activities.length > 0 ? activities : notifications;
+  const recommendationCards = recommendations.length > 0 ? recommendations.map((r, index) => ({
+    title: r.title,
+    category: r.category || 'Recommended',
+    reason: r.reason,
+    detail: r.detail || 'Based on your recent activity, profile, and learning goals.',
+    mentor: r.sourceType === 'resume' ? 'Resume Coach' : r.sourceType === 'project' ? 'Project Guide' : 'SkillSwap+ AI',
+    credits: r.credits || 0,
+    img: [
+      'https://images.unsplash.com/photo-1551434678-e076c223a692?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=900&q=80',
+      'https://images.unsplash.com/photo-1559136555-9303baea8ebd?auto=format&fit=crop&w=900&q=80'
+    ][index % 4],
+    mentorImg: 'https://ui-avatars.com/api/?name=' + encodeURIComponent(r.sourceType || 'AI') + '&background=7c3aed&color=fff'
+  })) : [
+    {
+      title: 'Advanced Three.js & Shaders',
+      category: 'Development',
+      reason: 'Matches your interest in Creative Coding and recent React completion.',
+      detail: 'Our AI analyzed your 5 most recent workshop completions and identified a growing pattern in WebGL interest.',
+      mentor: 'Elena Volkov',
+      credits: 12,
+      img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBh6hmgK7eJ-VPizGi5r9uMFAQj4H9QakDSA1HyXps7Y-7uBAqKymkY31_2TIiC9Jj1_lB7UtIw5aJDeBeUFQVYDogxvcZBXsR2LEps_vzWZ95O2ze9qCs0STWp0_sFJYxcypFIDFXalMFNBi2ObSstHHW9BjFBGDSlgofEvQqfpm9xTPZC439mnRf6phDfpttVMKAPuny8NJFj22ph2j979TKmnDG3w2CB5r1P-QVscRzQwoCp9UbsNiUnH0mKHWqHD6TFKqAqvQ',
+      mentorImg: 'https://ui-avatars.com/api/?name=Elena+Volkov&background=7c3aed&color=fff'
+    },
+    {
+      title: 'Spatial Design Systems',
+      category: 'UI Design',
+      reason: 'Popular among people with your Skill Profile (Product Designer).',
+      detail: '85% of users with the "Product Designer" tag have added this workshop to their wishlist this week.',
+      mentor: 'Sarah Chen',
+      credits: 8,
+      img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD95xttH7ol9zdnNsaHgkaT_Gsk6XavNkdFTjNN_jq-OfY3FhixNPEUj1kn0k8Uv2KuOHhyvnTtdaVPVlitdlitUynqJNXZrEitDth_C7TmIjlxYU98BrSDA0EZfbQO_pAMIx6eLEIh0dulnG6bpgMr5WW-VkB9ncQebRiTL60SSLyhI8OqLiNdELMZSAaiO3kjbOtgeG_SfNj0pTqx3RMzzSroI14ZUBqgRvhOxCz0-2CjkWdCcGjCr5HQXQbB1XYThrlqU9xU2Q',
+      mentorImg: 'https://ui-avatars.com/api/?name=Sarah+Chen&background=059669&color=fff'
+    }
+  ];
 
   // Color map for Tailwind-safe badge colors
   const colorMap = {
@@ -151,6 +210,27 @@ export async function renderDashboard(container) {
         </div>
       </div>
 
+      ${analytics ? `
+        <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+          ${[
+            { label: 'Profile Complete', value: `${completion || 0}%`, icon: 'verified_user', color: colorMap.violet },
+            { label: 'Projects', value: summary.projects || 0, icon: 'work', color: colorMap.sky },
+            { label: 'Resumes', value: summary.resumes || 0, icon: 'description', color: colorMap.emerald },
+            { label: 'Credits Flow', value: `+${summary.creditsEarned || 0} / -${summary.creditsSpent || 0}`, icon: 'monitoring', color: colorMap.amber }
+          ].map(metric => `
+            <div class="bg-white rounded-2xl border border-zinc-100 p-5 shadow-sm">
+              <div class="flex items-center gap-3 mb-3">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:${metric.color.bg}">
+                  <span class="material-symbols-outlined text-base" style="color:${metric.color.text}">${metric.icon}</span>
+                </div>
+                <span class="text-[10px] font-black uppercase tracking-widest text-zinc-400">${metric.label}</span>
+              </div>
+              <p class="text-2xl font-black text-zinc-900">${metric.value}</p>
+            </div>
+          `).join('')}
+        </section>
+      ` : ''}
+
       <!-- Main Grid -->
       <div class="grid grid-cols-12 gap-12">
         <!-- AI Recommendations -->
@@ -160,28 +240,7 @@ export async function renderDashboard(container) {
             <a href="#/marketplace" class="text-primary font-bold text-sm hover:underline">See all</a>
           </div>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            ${[
-      {
-        title: 'Advanced Three.js & Shaders',
-        category: 'Development',
-        reason: 'Matches your interest in Creative Coding and recent React completion.',
-        detail: 'Our AI analyzed your 5 most recent workshop completions and identified a growing pattern in WebGL interest.',
-        mentor: 'Elena Volkov',
-        credits: 12,
-        img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuBh6hmgK7eJ-VPizGi5r9uMFAQj4H9QakDSA1HyXps7Y-7uBAqKymkY31_2TIiC9Jj1_lB7UtIw5aJDeBeUFQVYDogxvcZBXsR2LEps_vzWZ95O2ze9qCs0STWp0_sFJYxcypFIDFXalMFNBi2ObSstHHW9BjFBGDSlgofEvQqfpm9xTPZC439mnRf6phDfpttVMKAPuny8NJFj22ph2j979TKmnDG3w2CB5r1P-QVscRzQwoCp9UbsNiUnH0mKHWqHD6TFKqAqvQ',
-        mentorImg: 'https://ui-avatars.com/api/?name=Elena+Volkov&background=7c3aed&color=fff'
-      },
-      {
-        title: 'Spatial Design Systems',
-        category: 'UI Design',
-        reason: 'Popular among people with your Skill Profile (Product Designer).',
-        detail: '85% of users with the "Product Designer" tag have added this workshop to their wishlist this week.',
-        mentor: 'Sarah Chen',
-        credits: 8,
-        img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuD95xttH7ol9zdnNsaHgkaT_Gsk6XavNkdFTjNN_jq-OfY3FhixNPEUj1kn0k8Uv2KuOHhyvnTtdaVPVlitdlitUynqJNXZrEitDth_C7TmIjlxYU98BrSDA0EZfbQO_pAMIx6eLEIh0dulnG6bpgMr5WW-VkB9ncQebRiTL60SSLyhI8OqLiNdELMZSAaiO3kjbOtgeG_SfNj0pTqx3RMzzSroI14ZUBqgRvhOxCz0-2CjkWdCcGjCr5HQXQbB1XYThrlqU9xU2Q',
-        mentorImg: 'https://ui-avatars.com/api/?name=Sarah+Chen&background=059669&color=fff'
-      }
-    ].map(card => `
+            ${recommendationCards.slice(0, 4).map(card => `
               <div class="group bg-white rounded-2xl p-6 border border-zinc-100 hover:border-primary/20 hover:shadow-2xl hover:shadow-zinc-200/50 transition-all duration-300">
                 <div class="relative h-44 w-full rounded-xl overflow-hidden mb-5">
                   <img alt="${card.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" src="${card.img}" />
@@ -232,16 +291,16 @@ export async function renderDashboard(container) {
           <section class="bg-white rounded-2xl p-8 border border-zinc-100 shadow-sm">
             <div class="flex items-center justify-between mb-8">
               <h3 class="font-black text-lg">Activity</h3>
-              <span class="h-6 w-6 bg-red-500 text-white text-[10px] flex items-center justify-center rounded-full font-bold">${notifications.length}</span>
+              <span class="h-6 w-6 bg-red-500 text-white text-[10px] flex items-center justify-center rounded-full font-bold">${activityFeed.length}</span>
             </div>
             <div class="space-y-6" id="notification-feed">
-              ${notifications.length === 0 ? `
+              ${activityFeed.length === 0 ? `
                 <div class="flex flex-col items-center justify-center py-8 text-center">
                   <span class="material-symbols-outlined text-4xl text-zinc-200 mb-3">check_circle</span>
                   <p class="text-zinc-500 font-bold text-sm">You're all caught up 🎉</p>
                   <p class="text-[10px] text-zinc-400 uppercase tracking-widest mt-1">No new alerts</p>
                 </div>
-              ` : notifications.slice(0, 4).map(n => {
+              ` : activityFeed.slice(0, 5).map(n => {
       const nc = colorMap[n.color] || colorMap.violet;
       return `
                 <div class="flex gap-4">

@@ -94,6 +94,51 @@ const userSchema = new mongoose.Schema(
       default: 'user'
     },
 
+    level: {
+      type: Number,
+      default: 1,
+      min: 1
+    },
+
+    xp: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
+
+    xpMax: {
+      type: Number,
+      default: 1000,
+      min: 1
+    },
+
+    tier: {
+      type: String,
+      default: 'Starter',
+      trim: true
+    },
+
+    streak: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
+
+    badges: [
+      {
+        name: { type: String, required: true, trim: true },
+        icon: { type: String, default: 'stars', trim: true },
+        color: { type: String, default: 'violet', trim: true }
+      }
+    ],
+
+    stats: {
+      sessionsTaught: { type: Number, default: 0, min: 0 },
+      sessionsAttended: { type: Number, default: 0, min: 0 },
+      creditsEarned: { type: Number, default: 0, min: 0 },
+      communityPosts: { type: Number, default: 0, min: 0 }
+    },
+
     refreshToken: {
       type: String,
       select: false
