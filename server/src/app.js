@@ -28,6 +28,7 @@ const recommendationRoutes = require('./routes/recommendation.routes');
 const activityRoutes = require('./routes/activity.routes');
 const profileCompletionRoutes = require('./routes/profileCompletion.routes');
 const analyticsRoutes = require('./routes/analytics.routes');
+const communityRoutes = require('./routes/community.routes');
 
 const app = express();
 
@@ -87,6 +88,7 @@ app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/activity', activityRoutes);
 app.use('/api/profile-completion', profileCompletionRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/community', communityRoutes);
 
 // ─── 404 Handler ───────────────────────────
 

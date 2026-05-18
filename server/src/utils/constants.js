@@ -39,6 +39,7 @@ module.exports = {
     SESSION: 'session',
     CREDIT: 'credit',
     REVIEW: 'review',
+    COMMUNITY: 'community',
     SYSTEM: 'system'
   },
 
