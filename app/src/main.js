@@ -18,11 +18,12 @@ import { renderAssignments } from './pages/assignments.js';
 import { renderProfile } from './pages/profile.js';
 import { renderSettings } from './pages/settings.js';
 import { renderMentorApply } from './pages/mentor-apply.js';
+import { renderCreateSession } from './pages/create-session.js';
 import { renderReferral } from './pages/referral.js';
 import { showToast } from './components/toast.js';
 
 // Pages that use the sidebar layout
-const sidebarPages = ['/dashboard', '/marketplace', '/session', '/community', '/assignments', '/profile', '/settings', '/mentor-apply', '/referral'];
+const sidebarPages = ['/dashboard', '/marketplace', '/session', '/community', '/assignments', '/profile', '/settings', '/mentor-apply', '/create-session', '/referral'];
 
 /**
  * Fetch the user profile from API and populate state.
@@ -118,6 +119,9 @@ router
   })
   .register('/mentor-apply', (c) => {
     renderMentorApply(c);
+  })
+  .register('/create-session', (c) => {
+    renderCreateSession(c);
   })
   .register('/referral', (c) => {
     renderReferral(c);

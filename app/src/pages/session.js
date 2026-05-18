@@ -6,7 +6,7 @@
 
 import { store } from '../state.js';
 import { showToast } from '../components/toast.js';
-import { fetchMySessions } from '../services/data.layer.js';
+import { fetchMyBookings } from '../services/data.layer.js';
 
 let countdownInterval = null;
 
@@ -21,22 +21,23 @@ export async function renderSession(container) {
     </div>
   `;
 
-  // Fetch sessions through data layer
+  // Fetch bookings through data layer. Meeting URLs are backend-generated only
+  // after mentor acceptance.
   let allSessions = [];
-  const res = await fetchMySessions();
+  const res = await fetchMyBookings();
   if (!res.error && res.data) {
-    const { hosting = [], attending = [] } = res.data;
+    const { mentoring = [], learning = [] } = res.data;
     allSessions = [
-      ...hosting.map(s => ({ ...s, role: 'hosting' })),
-      ...attending.map(s => ({ ...s, role: s.role || 'attending' }))
-    ];
+      ...mentoring.map(b => ({ ...(b.session || {}), booking: b, role: 'hosting', meetingUrl: b.meetingUrl, bookingStatus: b.status })),
+      ...learning.map(b => ({ ...(b.session || {}), booking: b, role: 'attending', meetingUrl: b.meetingUrl, bookingStatus: b.status }))
+    ].filter(s => s._id);
     store.setSessionsFromAPI(allSessions);
   } else {
     allSessions = store.get('sessions') || [];
   }
 
   const upcomingSessions = allSessions.filter(s =>
-    s.status === 'open' || s.status === 'full' || s.status === 'upcoming'
+    s.bookingStatus === 'accepted' || s.bookingStatus === 'pending'
   );
   const nextSession = upcomingSessions[0] || null;
 
@@ -45,9 +46,7 @@ export async function renderSession(container) {
     ? new Date(`${nextSession.date.split('T')[0]}T${nextSession.startTime || nextSession.time || '00:00'}:00`)
     : null;
 
-  // Generate Google Meet link
-  const meetCode = nextSession ? (nextSession._id || nextSession.id || 'session').replace(/[^a-z0-9]/gi,'').slice(0,12) : 'demo';
-  const meetLink = `https://meet.google.com/skillswap-${meetCode}`;
+  const meetLink = nextSession?.meetingUrl || '';
 
   container.innerHTML = `
     <div class="pt-12 px-12 pb-24 max-w-[1200px] mx-auto">
@@ -119,19 +118,23 @@ export async function renderSession(container) {
                 </div>
               </div>
 
-              <!-- Google Meet Button -->
-              <a href="${meetLink}" target="_blank" id="join-meeting-btn" class="mt-10 px-12 py-5 bg-primary text-white font-black text-lg rounded-full shadow-xl shadow-primary/25 hover:-translate-y-1 transition-all btn-press inline-flex items-center gap-3">
+              <!-- Meeting Button -->
+              ${meetLink ? `<a href="${meetLink}" target="_blank" id="join-meeting-btn" class="mt-10 px-12 py-5 bg-primary text-white font-black text-lg rounded-full shadow-xl shadow-primary/25 hover:-translate-y-1 transition-all btn-press inline-flex items-center gap-3">
                 <span class="material-symbols-outlined">videocam</span>
-                Join via Google Meet
+                Join via Jitsi Meet
               </a>
-              <p class="text-xs text-zinc-400 mt-3">Opens Google Meet in a new tab</p>
+              <p class="text-xs text-zinc-400 mt-3">Opens Jitsi Meet in a new tab</p>` : `
+              <div class="mt-10 px-8 py-5 bg-amber-50 text-amber-700 font-black rounded-full inline-flex items-center gap-3 border border-amber-200">
+                <span class="material-symbols-outlined">hourglass_top</span>
+                Waiting for mentor acceptance
+              </div>`}
 
               <!-- Meet Link Display -->
-              <div class="mt-6 bg-zinc-50 rounded-2xl p-4 border border-zinc-100 inline-flex items-center gap-3">
+              ${meetLink ? `<div class="mt-6 bg-zinc-50 rounded-2xl p-4 border border-zinc-100 inline-flex items-center gap-3">
                 <span class="material-symbols-outlined text-emerald-500 text-sm">link</span>
                 <code class="text-xs text-zinc-600 font-mono" id="meet-link-text">${meetLink}</code>
                 <button id="copy-meet-link" class="text-primary text-xs font-bold hover:underline">Copy</button>
-              </div>
+              </div>` : ''}
             </div>
 
             <!-- Session Preparation -->
@@ -174,7 +177,7 @@ export async function renderSession(container) {
               <div class="space-y-3">
                 <div class="flex items-center gap-3 text-sm">
                   <span class="material-symbols-outlined text-emerald-600 text-lg">videocam</span>
-                  <span class="font-medium text-zinc-700">Google Meet</span>
+                  <span class="font-medium text-zinc-700">${meetLink ? 'Jitsi Meet' : 'Pending acceptance'}</span>
                 </div>
                 <div class="flex items-center gap-3 text-sm">
                   <span class="material-symbols-outlined text-emerald-600 text-lg">schedule</span>
@@ -185,10 +188,10 @@ export async function renderSession(container) {
                   <span class="font-medium text-zinc-700">${nextSession.credits || 0} Credits</span>
                 </div>
               </div>
-              <a href="${meetLink}" target="_blank" class="mt-6 w-full py-3 bg-emerald-600 text-white rounded-full text-xs font-bold text-center hover:bg-emerald-700 transition-all btn-press flex items-center justify-center gap-2">
+              ${meetLink ? `<a href="${meetLink}" target="_blank" class="mt-6 w-full py-3 bg-emerald-600 text-white rounded-full text-xs font-bold text-center hover:bg-emerald-700 transition-all btn-press flex items-center justify-center gap-2">
                 <span class="material-symbols-outlined text-sm">open_in_new</span>
                 Open Meet Link
-              </a>
+              </a>` : ''}
             </div>
 
             <!-- Session Notes -->

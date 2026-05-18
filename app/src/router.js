@@ -9,7 +9,7 @@ import { isAuthenticated } from './services/auth.service.js';
 const protectedRoutes = [
   '/dashboard', '/marketplace', '/session',
   '/community', '/assignments', '/profile',
-  '/settings', '/mentor-apply', '/referral'
+  '/settings', '/mentor-apply', '/create-session', '/referral'
 ];
 
 class Router {

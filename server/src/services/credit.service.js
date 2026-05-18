@@ -83,6 +83,107 @@ const transferCredits = async (fromUserId, toUserId, amount, sessionId, sessionT
 };
 
 /**
+ * Reserve learner credits for a booking. Credits leave the learner balance but
+ * are not paid to the mentor until completion.
+ */
+const reserveCredits = async (learnerId, amount, sessionId, mentorId, sessionTitle, dbSession, bookingId) => {
+  const learner = await User.findOneAndUpdate(
+    { _id: learnerId, credits: { $gte: amount } },
+    { $inc: { credits: -amount } },
+    { new: true, session: dbSession }
+  );
+
+  if (!learner) {
+    throw new AppError('Insufficient credits to reserve this booking.', 400);
+  }
+
+  await Transaction.create(
+    [
+      {
+        user: learnerId,
+        type: TRANSACTION_TYPE.SPEND,
+        amount: -amount,
+        balance: learner.credits,
+        description: `Reserved ${amount} credits in escrow for: "${sessionTitle}"`,
+        relatedSession: sessionId,
+        relatedBooking: bookingId,
+        relatedUser: mentorId
+      }
+    ],
+    { session: dbSession }
+  );
+
+  return learner.credits;
+};
+
+/**
+ * Release reserved credits to the mentor after the booking is completed.
+ */
+const releaseReservedCredits = async (mentorId, amount, sessionId, learnerId, sessionTitle, dbSession, bookingId) => {
+  const mentor = await User.findByIdAndUpdate(
+    mentorId,
+    { $inc: { credits: amount, 'stats.creditsEarned': amount, 'stats.sessionsTaught': 1 } },
+    { new: true, session: dbSession }
+  );
+
+  if (!mentor) {
+    throw new AppError('Mentor account not found.', 404);
+  }
+
+  await Transaction.create(
+    [
+      {
+        user: mentorId,
+        type: TRANSACTION_TYPE.EARN,
+        amount,
+        balance: mentor.credits,
+        description: `Released ${amount} escrow credits for teaching: "${sessionTitle}"`,
+        relatedSession: sessionId,
+        relatedBooking: bookingId,
+        relatedUser: learnerId
+      }
+    ],
+    { session: dbSession }
+  );
+
+  return mentor.credits;
+};
+
+/**
+ * Refund reserved credits to the learner when a pending/accepted booking ends
+ * without completion.
+ */
+const refundReservedCredits = async (learnerId, amount, sessionId, mentorId, sessionTitle, reason, dbSession, bookingId) => {
+  const learner = await User.findByIdAndUpdate(
+    learnerId,
+    { $inc: { credits: amount } },
+    { new: true, session: dbSession }
+  );
+
+  if (!learner) {
+    throw new AppError('Learner account not found.', 404);
+  }
+
+  await Transaction.create(
+    [
+      {
+        user: learnerId,
+        type: TRANSACTION_TYPE.REFUND,
+        amount,
+        balance: learner.credits,
+        description: `${reason || 'Refunded'} ${amount} escrow credits for: "${sessionTitle}"`,
+        relatedSession: sessionId,
+        relatedBooking: bookingId,
+        relatedUser: mentorId
+      }
+    ],
+    { session: dbSession }
+  );
+
+  return learner.credits;
+};
+
+/**
  * Add bonus credits to a user (for streaks, promotions, etc.).
  */
 const addBonusCredits = async (userId, amount, reason = 'System bonus') => {
@@ -162,6 +263,9 @@ const getTransactionHistory = async (userId, page = 1, limit = 10) => {
 
 module.exports = {
   transferCredits,
+  reserveCredits,
+  releaseReservedCredits,
+  refundReservedCredits,
   addBonusCredits,
   getBalance,
   getTransactionHistory

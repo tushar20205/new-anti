@@ -165,17 +165,12 @@ userSchema.index({ rating: -1 });
 
 // ─── Pre-save: Hash password ───────────────
 
-userSchema.pre('save', async function (next) {
+userSchema.pre('save', async function () {
   // Only hash if password is modified
-  if (!this.isModified('password')) return next();
+  if (!this.isModified('password')) return;
 
-  try {
-    const salt = await bcrypt.genSalt(12);
-    this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (err) {
-    next(err);
-  }
+  const salt = await bcrypt.genSalt(12);
+  this.password = await bcrypt.hash(this.password, salt);
 });
 
 // ─── Instance Methods ──────────────────────

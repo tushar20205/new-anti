@@ -65,6 +65,15 @@ export async function fetchMySessions() {
   }
 }
 
+export async function fetchMyBookings() {
+  try {
+    const { getMyBookings } = await import('./booking.service.js');
+    return ok(await getMyBookings());
+  } catch (e) {
+    return fail(e.message || 'Bookings fetch error');
+  }
+}
+
 // ═══════════════════════════════════════════
 //  CREDITS / TRANSACTIONS
 // ═══════════════════════════════════════════

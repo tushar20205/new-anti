@@ -5,6 +5,10 @@
 import { store } from '../state.js';
 import { showToast } from '../components/toast.js';
 
+function displayId(entity) {
+  return entity?._id || entity?.id || '';
+}
+
 export async function renderDashboard(container) {
   const user = store.get('user');
   const credits = store.get('credits');
@@ -45,15 +49,18 @@ export async function renderDashboard(container) {
   let activities = [];
   let recommendations = [];
   let analytics = null;
+  let bookingData = { learning: [], mentoring: [] };
 
   try {
     const { getMySessions } = await import('../services/session.service.js');
     const { getNotifications } = await import('../services/notification.service.js');
     const { getDashboardAnalytics, getRecommendations, getActivity } = await import('../services/platform.service.js');
+    const { getMyBookings } = await import('../services/booking.service.js');
 
-    const [sessionsData, notifData] = await Promise.allSettled([
+    const [sessionsData, notifData, bookingsResult] = await Promise.allSettled([
       getMySessions(),
-      getNotifications()
+      getNotifications(),
+      getMyBookings()
     ]);
 
     const [analyticsData, recommendationData, activityData] = await Promise.allSettled([
@@ -80,6 +87,28 @@ export async function renderDashboard(container) {
       const raw = notifData.value;
       notifications = Array.isArray(raw) ? raw : [];
       store.setNotificationsFromAPI(notifications);
+    }
+
+    if (bookingsResult.status === 'fulfilled' && bookingsResult.value) {
+      bookingData = bookingsResult.value;
+      const bookingSessions = [
+        ...(bookingData.learning || []),
+        ...(bookingData.mentoring || [])
+      ]
+        .filter(b => ['accepted', 'pending'].includes(b.status) && b.session)
+        .map(b => ({
+          ...b.session,
+          bookingId: b._id,
+          bookingStatus: b.status,
+          meetingUrl: b.meetingUrl,
+          creditsReserved: b.creditsReserved,
+          role: b.mentor?._id === displayId(store.get('user')) ? 'hosting' : 'attending',
+          learner: b.learner,
+          mentor: b.mentor
+        }));
+      if (bookingSessions.length > 0) {
+        upcomingSessions = bookingSessions;
+      }
     }
 
     if (analyticsData.status === 'fulfilled') {
@@ -112,6 +141,9 @@ export async function renderDashboard(container) {
   const summary = analytics?.summary || {};
   const completion = summary.profileCompletion ?? analytics?.profileCompletion?.percentage;
   const activityFeed = activities.length > 0 ? activities : notifications;
+  const incomingBookings = (bookingData.mentoring || []).filter(b => b.status === 'pending');
+  const mentoringBookings = (bookingData.mentoring || []).filter(b => ['accepted', 'completed', 'cancelled', 'rejected'].includes(b.status));
+  const learningBookings = (bookingData.learning || []).filter(b => ['pending', 'accepted', 'completed', 'cancelled', 'rejected'].includes(b.status));
   const recommendationCards = recommendations.length > 0 ? recommendations.map((r, index) => ({
     title: r.title,
     category: r.category || 'Recommended',
@@ -167,7 +199,7 @@ export async function renderDashboard(container) {
           <p class="text-zinc-500 text-lg">You have <span class="font-bold text-zinc-900">${upcomingSessions.length} session${upcomingSessions.length !== 1 ? 's' : ''}</span> upcoming. Ready to level up?</p>
           <div class="flex gap-4 mt-8">
             <a href="#/marketplace" class="bg-primary text-white px-8 py-3.5 rounded-full font-bold text-sm shadow-lg shadow-primary/20 hover:scale-105 btn-press inline-block">Explore Workshops</a>
-            <a href="#/mentor-apply" class="bg-white border border-zinc-200 px-8 py-3.5 rounded-full font-bold text-sm hover:bg-zinc-50 transition-all inline-block">Schedule Teaching</a>
+            <a href="#/create-session" class="bg-white border border-zinc-200 px-8 py-3.5 rounded-full font-bold text-sm hover:bg-zinc-50 transition-all inline-block">Create Session</a>
           </div>
         </div>
 
@@ -283,7 +315,7 @@ export async function renderDashboard(container) {
             <p class="text-xs opacity-60 mt-1">Available for bookings</p>
             <div class="flex gap-3 mt-4">
               <a href="#/marketplace" class="text-[10px] font-bold bg-white/20 px-3 py-1.5 rounded-full hover:bg-white/30 transition-all">Spend Credits</a>
-              <a href="#/mentor-apply" class="text-[10px] font-bold bg-white/20 px-3 py-1.5 rounded-full hover:bg-white/30 transition-all">Earn More</a>
+              <a href="#/create-session" class="text-[10px] font-bold bg-white/20 px-3 py-1.5 rounded-full hover:bg-white/30 transition-all">Earn More</a>
             </div>
           </div>
 
@@ -317,6 +349,79 @@ export async function renderDashboard(container) {
           </section>
         </aside>
 
+        ${(incomingBookings.length > 0 || learningBookings.length > 0 || mentoringBookings.length > 0) ? `
+        <section class="col-span-12 grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="bg-white rounded-2xl border border-zinc-100 p-6 shadow-sm">
+            <div class="flex items-center justify-between mb-5">
+              <h3 class="text-lg font-black text-zinc-900">Incoming Booking Requests</h3>
+              <span class="text-xs font-black text-primary">${incomingBookings.length}</span>
+            </div>
+            ${incomingBookings.length === 0 ? `
+              <p class="text-sm text-zinc-400 py-6 text-center">No pending learner requests.</p>
+            ` : incomingBookings.map(b => `
+              <div class="border border-zinc-100 rounded-xl p-4 mb-3 bg-zinc-50/60">
+                <div class="flex items-start justify-between gap-4">
+                  <div>
+                    <p class="font-black text-sm text-zinc-900">${b.session?.title || 'Session'}</p>
+                    <p class="text-xs text-zinc-500 mt-1">${b.learner?.name || 'Learner'} reserved ${b.creditsReserved} credits</p>
+                  </div>
+                  <span class="bg-amber-100 text-amber-700 px-2 py-1 rounded-full text-[9px] font-black uppercase">pending</span>
+                </div>
+                <div class="flex gap-2 mt-4">
+                  <button class="booking-action flex-1 bg-emerald-600 text-white py-2 rounded-full text-xs font-black" data-action="accept" data-booking-id="${b._id}">Accept</button>
+                  <button class="booking-action flex-1 bg-white border border-zinc-200 text-zinc-600 py-2 rounded-full text-xs font-black" data-action="reject" data-booking-id="${b._id}">Reject</button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+
+          <div class="bg-white rounded-2xl border border-zinc-100 p-6 shadow-sm">
+            <div class="flex items-center justify-between mb-5">
+              <h3 class="text-lg font-black text-zinc-900">Mentoring Bookings</h3>
+              <span class="text-xs font-black text-primary">${mentoringBookings.length}</span>
+            </div>
+            ${mentoringBookings.length === 0 ? `
+              <p class="text-sm text-zinc-400 py-6 text-center">No accepted or completed mentor bookings yet.</p>
+            ` : mentoringBookings.slice(0, 5).map(b => `
+              <div class="border border-zinc-100 rounded-xl p-4 mb-3 bg-white">
+                <div class="flex items-start justify-between gap-4">
+                  <div>
+                    <p class="font-black text-sm text-zinc-900">${b.session?.title || 'Session'}</p>
+                    <p class="text-xs text-zinc-500 mt-1">${b.learner?.name || 'Learner'} - ${b.creditsReserved} credits</p>
+                    ${b.meetingUrl ? `<a href="${b.meetingUrl}" target="_blank" class="text-xs font-black text-emerald-700 mt-2 inline-flex items-center gap-1"><span class="material-symbols-outlined text-sm">videocam</span> Meeting link</a>` : ''}
+                  </div>
+                  <span class="bg-zinc-100 text-zinc-600 px-2 py-1 rounded-full text-[9px] font-black uppercase">${b.status}</span>
+                </div>
+                ${b.status === 'accepted' ? `
+                  <button class="booking-action mt-4 bg-zinc-900 text-white w-full py-2 rounded-full text-[10px] font-bold hover:bg-zinc-800 transition-all" data-action="complete" data-booking-id="${b._id}">
+                    Complete & Release Credits
+                  </button>
+                ` : ''}
+              </div>
+            `).join('')}
+          </div>
+
+          <div class="bg-white rounded-2xl border border-zinc-100 p-6 shadow-sm">
+            <div class="flex items-center justify-between mb-5">
+              <h3 class="text-lg font-black text-zinc-900">Your Booking Status</h3>
+              <span class="text-xs font-black text-primary">${learningBookings.length}</span>
+            </div>
+            ${learningBookings.length === 0 ? `
+              <p class="text-sm text-zinc-400 py-6 text-center">No learner bookings yet.</p>
+            ` : learningBookings.slice(0, 5).map(b => `
+              <div class="flex items-center justify-between gap-4 border border-zinc-100 rounded-xl p-4 mb-3">
+                <div>
+                  <p class="font-black text-sm text-zinc-900">${b.session?.title || 'Session'}</p>
+                  <p class="text-xs text-zinc-500 mt-1">${b.mentor?.name || 'Mentor'} • ${b.creditsReserved} credits escrowed</p>
+                  ${b.meetingUrl ? `<a href="${b.meetingUrl}" target="_blank" class="text-xs font-black text-emerald-700 mt-2 inline-flex items-center gap-1"><span class="material-symbols-outlined text-sm">videocam</span> Join Jitsi Meet</a>` : ''}
+                </div>
+                <span class="bg-zinc-100 text-zinc-600 px-2 py-1 rounded-full text-[9px] font-black uppercase">${b.status}</span>
+              </div>
+            `).join('')}
+          </div>
+        </section>
+        ` : ''}
+
         <!-- Upcoming Sessions -->
         <section class="col-span-12">
           <h3 class="text-2xl font-black tracking-tight mb-8">Your Upcoming Sessions</h3>
@@ -334,9 +439,7 @@ export async function renderDashboard(container) {
         const hostName = s.host?.name || s.mentor || 'Instructor';
         const hostAvatar = s.host?.profilePicture || s.mentorAvatar || 'https://ui-avatars.com/api/?name=' + encodeURIComponent(hostName) + '&background=6927ef&color=fff';
         const sessionDate = s.date ? new Date(s.date) : new Date();
-        // Generate a meet link from session ID
-        const meetCode = (s._id || s.id || 'abc').replace(/[^a-z0-9]/gi, '').slice(0, 12);
-        const meetLink = `https://meet.google.com/skillswap-${meetCode}`;
+        const meetLink = s.meetingUrl || '';
         return `
               <div class="glass-card rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-6 hover:shadow-xl hover:shadow-zinc-200/30 transition-all group">
                 <div class="flex items-center gap-6 w-full">
@@ -361,10 +464,16 @@ export async function renderDashboard(container) {
                 </div>
                 <div class="flex flex-col gap-2 min-w-[140px]">
                   <a href="#/session" class="bg-primary text-white w-full py-2.5 rounded-full text-xs font-black hover:scale-105 transition-all shadow-md shadow-primary/20 text-center btn-press">View Session</a>
-                  <a href="${meetLink}" target="_blank" class="flex items-center justify-center gap-1.5 bg-emerald-50 text-emerald-700 w-full py-2 rounded-full text-[10px] font-bold border border-emerald-200 hover:bg-emerald-100 transition-all">
+                  ${s.role === 'hosting' && s.bookingStatus === 'accepted' ? `<button class="booking-action bg-zinc-900 text-white w-full py-2 rounded-full text-[10px] font-bold hover:bg-zinc-800 transition-all" data-action="complete" data-booking-id="${s.bookingId}">
+                    Complete & Release
+                  </button>` : ''}
+                  ${meetLink ? `<a href="${meetLink}" target="_blank" class="flex items-center justify-center gap-1.5 bg-emerald-50 text-emerald-700 w-full py-2 rounded-full text-[10px] font-bold border border-emerald-200 hover:bg-emerald-100 transition-all">
                     <span class="material-symbols-outlined text-xs">videocam</span>
-                    Join Meet
-                  </a>
+                    Join Jitsi
+                  </a>` : `<span class="flex items-center justify-center gap-1.5 bg-amber-50 text-amber-700 w-full py-2 rounded-full text-[10px] font-bold border border-amber-200">
+                    <span class="material-symbols-outlined text-xs">hourglass_top</span>
+                    Awaiting acceptance
+                  </span>`}
                 </div>
               </div>
             `}).join('')}
@@ -378,5 +487,45 @@ export async function renderDashboard(container) {
   store.on('credits', (c) => {
     const el = document.getElementById('dashboard-credits');
     if (el) el.textContent = c;
+  });
+
+  document.querySelectorAll('.booking-action').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.bookingId;
+      const action = btn.dataset.action;
+      const original = btn.textContent;
+      const matchingButtons = document.querySelectorAll(`.booking-action[data-booking-id="${id}"]`);
+      matchingButtons.forEach(actionBtn => {
+        actionBtn.disabled = true;
+      });
+      btn.textContent = action === 'accept' ? 'Accepting...' : action === 'reject' ? 'Rejecting...' : 'Working...';
+
+      try {
+        const service = await import('../services/booking.service.js');
+        let updatedBooking = null;
+        if (action === 'accept') updatedBooking = await service.acceptBooking(id);
+        if (action === 'reject') updatedBooking = await service.rejectBooking(id);
+        if (action === 'complete') updatedBooking = await service.completeBooking(id);
+
+        const { getCredits } = await import('../services/credit.service.js');
+        const { fetchProfile, fetchMyBookings } = await import('../services/data.layer.js');
+        const [latestCredits] = await Promise.all([
+          getCredits(),
+          fetchProfile(),
+          fetchMyBookings()
+        ]);
+        store.setCredits(latestCredits.credits || 0);
+
+        const nextStatus = updatedBooking?.status || (action === 'complete' ? 'completed' : action === 'accept' ? 'accepted' : 'rejected');
+        showToast(`Booking is now ${nextStatus}.`, 'success');
+        await renderDashboard(container);
+      } catch (err) {
+        showToast(err.message || 'Booking action failed', 'error');
+        matchingButtons.forEach(actionBtn => {
+          actionBtn.disabled = false;
+        });
+        btn.textContent = original;
+      }
+    });
   });
 }
