@@ -43,10 +43,23 @@ function renderShowcaseMentor(mentor) {
 }
 
 function renderSessionCard(session) {
+  const currentUserId = store.getUserSafe()?._id;
+  const hostId = session.host?._id || session.host;
+  const participantIds = (session.participants || []).map((participant) => participant?._id || participant);
+  const isOwnSession = currentUserId && hostId && String(hostId) === String(currentUserId);
+  const isAlreadyParticipant = currentUserId && participantIds.some((id) => String(id) === String(currentUserId));
   const hostName = session.host?.name || 'Mentor';
   const hostAvatar = session.host?.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(hostName)}&background=6927ef&color=fff`;
   const sessionDate = session.date ? new Date(session.date).toLocaleDateString('en', { month: 'short', day: 'numeric' }) : 'TBD';
   const spotsLeft = Math.max((session.maxParticipants || 1) - ((session.participants || []).length), 0);
+  const bookingDisabled = isOwnSession || isAlreadyParticipant || spotsLeft <= 0;
+  const bookingLabel = isOwnSession
+    ? 'Your Session'
+    : isAlreadyParticipant
+      ? 'Already Joined'
+      : spotsLeft <= 0
+        ? 'Full'
+        : 'Request Booking';
 
   return `
     <article class="bg-white rounded-2xl border border-zinc-100 p-6 shadow-sm hover:shadow-xl hover:shadow-zinc-200/40 transition-all">
@@ -79,8 +92,8 @@ function renderSessionCard(session) {
           <p class="font-bold text-zinc-800">${spotsLeft} left</p>
         </div>
       </div>
-      <button class="book-session-btn w-full bg-primary text-white py-3 rounded-full text-sm font-black shadow-lg shadow-primary/20 disabled:opacity-60 disabled:cursor-not-allowed" data-session-id="${session._id}">
-        Request Booking
+      <button class="book-session-btn w-full bg-primary text-white py-3 rounded-full text-sm font-black shadow-lg shadow-primary/20 disabled:opacity-60 disabled:cursor-not-allowed" data-session-id="${session._id}" ${bookingDisabled ? 'disabled' : ''}>
+        ${bookingLabel}
       </button>
     </article>
   `;
