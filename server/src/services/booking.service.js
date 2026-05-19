@@ -434,29 +434,11 @@ async function completeBooking(bookingId, mentorId) {
   try {
     await dbSession.withTransaction(async () => {
       const completedAt = new Date();
-      booking = await Booking.findOneAndUpdate(
-        {
-          _id: bookingId,
-          mentor: mentorId,
-          status: BOOKING_STATUS.ACCEPTED
-        },
-        [
-          {
-            $set: {
-              status: BOOKING_STATUS.COMPLETED,
-              completedAt,
-              meetingUrl: {
-                $cond: [
-                  { $gt: [{ $strLenCP: { $ifNull: ['$meetingUrl', ''] } }, 0] },
-                  '$meetingUrl',
-                  generateMeetingUrl(bookingId)
-                ]
-              }
-            }
-          }
-        ],
-        { returnDocument: 'after', session: dbSession }
-      );
+      booking = await Booking.findOne({
+        _id: bookingId,
+        mentor: mentorId,
+        status: BOOKING_STATUS.ACCEPTED
+      }).session(dbSession);
 
       if (!booking) {
         booking = await Booking.findOne({
@@ -473,6 +455,13 @@ async function completeBooking(bookingId, mentorId) {
 
         throw new AppError('Accepted booking not found or already completed.', 404);
       }
+
+      booking.status = BOOKING_STATUS.COMPLETED;
+      booking.completedAt = completedAt;
+      if (!booking.meetingUrl) {
+        booking.meetingUrl = generateMeetingUrl(booking._id);
+      }
+      await booking.save({ session: dbSession });
 
       sessionDoc = await Session.findById(booking.session).session(dbSession);
       if (!sessionDoc) throw new AppError('Session not found.', 404);

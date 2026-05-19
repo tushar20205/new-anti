@@ -9,6 +9,7 @@ const morgan = require('morgan');
 const path = require('path');
 
 const env = require('./config/env');
+require('./config/mongooseGuards');
 const { generalLimiter } = require('./middleware/rateLimiter');
 const errorHandler = require('./middleware/errorHandler');
 const AppError = require('./utils/AppError');

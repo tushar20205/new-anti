@@ -5,6 +5,9 @@ Trade skills with others — earn credits by teaching, spend credits by learning
 
 ## 🚀 Quick Start
 
+For a full Docker-based local stack with frontend, API, and MongoDB replica set,
+see [`../DOCKER.md`](../DOCKER.md).
+
 ### Prerequisites
 - **Node.js** 18+ installed
 - **MongoDB Atlas** account (or local MongoDB)
