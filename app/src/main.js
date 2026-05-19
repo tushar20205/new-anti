@@ -6,7 +6,7 @@
 import { router } from './router.js';
 import { store } from './state.js';
 import { isAuthenticated } from './services/auth.service.js';
-import { fetchProfile, isDemoMode, performLogout } from './services/data.layer.js';
+import { fetchProfile, performLogout } from './services/data.layer.js';
 import { renderSidebar, initSidebar } from './components/sidebar.js';
 import { initChatbot } from './components/chatbot.js';
 import { renderLanding } from './pages/landing.js';
@@ -18,11 +18,12 @@ import { renderAssignments } from './pages/assignments.js';
 import { renderProfile } from './pages/profile.js';
 import { renderSettings } from './pages/settings.js';
 import { renderMentorApply } from './pages/mentor-apply.js';
+import { renderCreateSession } from './pages/create-session.js';
 import { renderReferral } from './pages/referral.js';
 import { showToast } from './components/toast.js';
 
 // Pages that use the sidebar layout
-const sidebarPages = ['/dashboard', '/marketplace', '/session', '/community', '/assignments', '/profile', '/settings', '/mentor-apply', '/referral'];
+const sidebarPages = ['/dashboard', '/marketplace', '/session', '/community', '/assignments', '/profile', '/settings', '/mentor-apply', '/create-session', '/referral'];
 
 /**
  * Fetch the user profile from API and populate state.
@@ -96,7 +97,7 @@ router
     renderLanding(c);
   })
   .register('/dashboard', (c) => {
-    renderDashboard(c);
+    return renderDashboard(c);
   })
   .register('/marketplace', (c) => {
     return renderMarketplace(c);
@@ -118,6 +119,9 @@ router
   })
   .register('/mentor-apply', (c) => {
     renderMentorApply(c);
+  })
+  .register('/create-session', (c) => {
+    renderCreateSession(c);
   })
   .register('/referral', (c) => {
     renderReferral(c);
@@ -164,13 +168,12 @@ function updateHeaderContent() {
 
 // ─── Bootstrap ──────────────────────────────
 (async function bootstrap() {
-  // If user has a token, init user data (data layer handles demo vs live)
+  // If user has a token, init user data from API
   if (isAuthenticated()) {
-    if (isDemoMode()) {
-      console.log('🎮 Running in demo mode');
-    } else {
-      const success = await initUserFromAPI();
-      if (!success) return;
+    const success = await initUserFromAPI();
+    if (!success) {
+      // Token invalid or API error — clear and stay on landing
+      localStorage.removeItem('token');
     }
   }
   // Render sidebar once

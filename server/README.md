@@ -5,6 +5,9 @@ Trade skills with others — earn credits by teaching, spend credits by learning
 
 ## 🚀 Quick Start
 
+For a full Docker-based local stack with frontend, API, and MongoDB replica set,
+see [`../DOCKER.md`](../DOCKER.md).
+
 ### Prerequisites
 - **Node.js** 18+ installed
 - **MongoDB Atlas** account (or local MongoDB)
@@ -23,12 +26,46 @@ cp .env.example .env
 # Edit .env with your MongoDB Atlas URI and JWT secrets
 ```
 
+> Important: booking escrow uses MongoDB transactions. Your `MONGODB_URI` must use
+> MongoDB Atlas, mongos, or a local replica set. A standalone local MongoDB URI
+> such as `mongodb://localhost:27017/skillswap` will not work with transactions.
+
 **Required `.env` values:**
 | Variable | Description |
 |---|---|
 | `MONGODB_URI` | MongoDB connection string |
 | `JWT_SECRET` | Secret key for access tokens |
 | `JWT_REFRESH_SECRET` | Secret key for refresh tokens |
+
+### MongoDB Transaction Setup
+
+Preferred development setup is MongoDB Atlas M0+:
+
+```env
+MONGODB_URI=mongodb+srv://<user>:<password>@<cluster>.mongodb.net/skillswap?retryWrites=true&w=majority&appName=ASEP
+```
+
+For local development, start MongoDB as a single-node replica set:
+
+```powershell
+New-Item -ItemType Directory -Force C:\data\asep-rs0
+mongod --dbpath C:\data\asep-rs0 --replSet rs0 --bind_ip localhost --port 27017
+```
+
+Then initialize it once in `mongosh`:
+
+```javascript
+rs.initiate({
+  _id: "rs0",
+  members: [{ _id: 0, host: "127.0.0.1:27017" }]
+})
+```
+
+Use this local URI:
+
+```env
+MONGODB_URI=mongodb://127.0.0.1:27017/skillswap?replicaSet=rs0
+```
 
 ### 3. Create Uploads Directory
 ```bash

@@ -9,9 +9,11 @@ const morgan = require('morgan');
 const path = require('path');
 
 const env = require('./config/env');
+require('./config/mongooseGuards');
 const { generalLimiter } = require('./middleware/rateLimiter');
 const errorHandler = require('./middleware/errorHandler');
 const AppError = require('./utils/AppError');
+
 
 // Route imports
 const authRoutes = require('./routes/auth.routes');
@@ -20,6 +22,14 @@ const sessionRoutes = require('./routes/session.routes');
 const creditRoutes = require('./routes/credit.routes');
 const reviewRoutes = require('./routes/review.routes');
 const notificationRoutes = require('./routes/notification.routes');
+const bookingRoutes = require('./routes/booking.routes');
+const projectResourceRoutes = require('./routes/projectResource.routes');
+const resumeRoutes = require('./routes/resume.routes');
+const recommendationRoutes = require('./routes/recommendation.routes');
+const activityRoutes = require('./routes/activity.routes');
+const profileCompletionRoutes = require('./routes/profileCompletion.routes');
+const analyticsRoutes = require('./routes/analytics.routes');
+const communityRoutes = require('./routes/community.routes');
 
 const app = express();
 
@@ -72,6 +82,14 @@ app.use('/api/sessions', sessionRoutes);
 app.use('/api/credits', creditRoutes);
 app.use('/api/reviews', reviewRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/bookings', bookingRoutes);
+app.use('/api/projects', projectResourceRoutes);
+app.use('/api/resumes', resumeRoutes);
+app.use('/api/recommendations', recommendationRoutes);
+app.use('/api/activity', activityRoutes);
+app.use('/api/profile-completion', profileCompletionRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/community', communityRoutes);
 
 // ─── 404 Handler ───────────────────────────
 

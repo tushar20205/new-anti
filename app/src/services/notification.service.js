@@ -11,7 +11,11 @@ import api from './api.js';
  */
 export async function getNotifications() {
   const res = await api.get('/notifications');
-  return res.data.notifications || res.data || [];
+  if (res.error) return [];
+  const payload = res.data?.data;
+  // Handle both { notifications: [...] } and direct array formats
+  if (Array.isArray(payload)) return payload;
+  return payload?.notifications || [];
 }
 
 /**
@@ -29,3 +33,4 @@ export async function markAllAsRead() {
   const res = await api.patch('/notifications/read-all', {});
   return res;
 }
+
