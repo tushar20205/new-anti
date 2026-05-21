@@ -27,7 +27,8 @@ async function apiFetch(endpoint, options = {}) {
 
   const config = {
     ...options,
-    headers
+    headers,
+    credentials: 'include'
   };
 
   // If body is an object, stringify it
@@ -36,11 +37,31 @@ async function apiFetch(endpoint, options = {}) {
   }
 
   try {
-    const response = await fetch(`${API_BASE}${endpoint}`, config);
+    let response = await fetch(`${API_BASE}${endpoint}`, config);
 
     // Handle 401 — token expired or invalid
+    if (response.status === 401 && !endpoint.startsWith('/auth/')) {
+      const refreshResponse = await fetch(`${API_BASE}/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({})
+      });
+
+      if (refreshResponse.ok) {
+        const refreshData = await refreshResponse.json().catch(() => null);
+        const accessToken = refreshData?.data?.accessToken;
+        if (accessToken) {
+          localStorage.setItem('token', accessToken);
+          config.headers.Authorization = `Bearer ${accessToken}`;
+          response = await fetch(`${API_BASE}${endpoint}`, config);
+        }
+      }
+    }
+
     if (response.status === 401) {
       localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
       window.location.hash = '/';
       return { data: null, error: true, status: 401, message: 'Session expired. Please log in again.' };
     }

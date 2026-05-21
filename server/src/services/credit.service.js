@@ -8,6 +8,10 @@ const Transaction = require('../models/Transaction');
 const { TRANSACTION_TYPE } = require('../utils/constants');
 const AppError = require('../utils/AppError');
 
+function logEscrowEvent(event, details) {
+  console.info(JSON.stringify({ level: 'info', type: 'audit', event, ...details }));
+}
+
 /**
  * Transfer credits from one user to another (atomic).
  * Used when a session request is accepted.
@@ -113,6 +117,14 @@ const reserveCredits = async (learnerId, amount, sessionId, mentorId, sessionTit
     { session: dbSession }
   );
 
+  logEscrowEvent('escrow.reserve', {
+    learnerId: String(learnerId),
+    mentorId: String(mentorId),
+    sessionId: String(sessionId),
+    bookingId: String(bookingId),
+    amount
+  });
+
   return learner.credits;
 };
 
@@ -145,6 +157,14 @@ const releaseReservedCredits = async (mentorId, amount, sessionId, learnerId, se
     ],
     { session: dbSession }
   );
+
+  logEscrowEvent('escrow.release', {
+    mentorId: String(mentorId),
+    learnerId: String(learnerId),
+    sessionId: String(sessionId),
+    bookingId: String(bookingId),
+    amount
+  });
 
   return mentor.credits;
 };
@@ -179,6 +199,15 @@ const refundReservedCredits = async (learnerId, amount, sessionId, mentorId, ses
     ],
     { session: dbSession }
   );
+
+  logEscrowEvent('escrow.refund', {
+    learnerId: String(learnerId),
+    mentorId: String(mentorId),
+    sessionId: String(sessionId),
+    bookingId: String(bookingId),
+    amount,
+    reason: reason || 'Refunded'
+  });
 
   return learner.credits;
 };

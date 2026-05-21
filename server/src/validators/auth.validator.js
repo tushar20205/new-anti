@@ -39,10 +39,7 @@ const loginSchema = Joi.object({
 });
 
 const refreshSchema = Joi.object({
-  refreshToken: Joi.string().required()
-    .messages({
-      'any.required': 'Refresh token is required'
-    })
+  refreshToken: Joi.string().min(20).optional()
 });
 
 module.exports = { registerSchema, loginSchema, refreshSchema };

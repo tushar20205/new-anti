@@ -16,9 +16,7 @@ export function getToken() {
 
 export function setTokens(accessToken, refreshToken) {
   localStorage.setItem(TOKEN_KEY, accessToken);
-  if (refreshToken) {
-    localStorage.setItem(REFRESH_KEY, refreshToken);
-  }
+  localStorage.removeItem(REFRESH_KEY);
 }
 
 export function removeTokens() {
@@ -107,15 +105,10 @@ export async function logout() {
  * @returns {string} new access token
  */
 export async function refreshAccessToken() {
-  const refreshToken = localStorage.getItem(REFRESH_KEY);
-  if (!refreshToken) {
-    throw new Error('No refresh token available');
-  }
-
-  const res = await api.post('/auth/refresh', { refreshToken });
+  const res = await api.post('/auth/refresh', {});
   if (res.error) throw new Error(res.message);
 
-  const { accessToken } = res.data;
+  const { accessToken } = res.data.data;
 
   localStorage.setItem(TOKEN_KEY, accessToken);
   return accessToken;

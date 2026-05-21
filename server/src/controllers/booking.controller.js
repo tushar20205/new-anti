@@ -1,8 +1,10 @@
 const bookingService = require('../services/booking.service');
 const catchAsync = require('../utils/catchAsync');
+const { logSecurityEvent } = require('../utils/security');
 
 const createBooking = catchAsync(async (req, res) => {
   const booking = await bookingService.createBooking(req.user._id, req.body.sessionId);
+  logSecurityEvent('booking.create', req, { bookingId: String(booking._id), sessionId: req.body.sessionId });
 
   res.status(201).json({
     status: 'success',
@@ -31,6 +33,7 @@ const getBookingById = catchAsync(async (req, res) => {
 
 const acceptBooking = catchAsync(async (req, res) => {
   const booking = await bookingService.acceptBooking(req.params.id, req.user._id);
+  logSecurityEvent('booking.accept', req, { bookingId: req.params.id });
 
   res.status(200).json({
     status: 'success',
@@ -41,6 +44,7 @@ const acceptBooking = catchAsync(async (req, res) => {
 
 const rejectBooking = catchAsync(async (req, res) => {
   const booking = await bookingService.rejectBooking(req.params.id, req.user._id);
+  logSecurityEvent('booking.reject', req, { bookingId: req.params.id });
 
   res.status(200).json({
     status: 'success',
@@ -51,6 +55,7 @@ const rejectBooking = catchAsync(async (req, res) => {
 
 const completeBooking = catchAsync(async (req, res) => {
   const booking = await bookingService.completeBooking(req.params.id, req.user._id);
+  logSecurityEvent('booking.complete', req, { bookingId: req.params.id, creditsReleased: booking.creditsReserved });
 
   res.status(200).json({
     status: 'success',
@@ -61,6 +66,7 @@ const completeBooking = catchAsync(async (req, res) => {
 
 const cancelBooking = catchAsync(async (req, res) => {
   const booking = await bookingService.cancelBooking(req.params.id, req.user._id);
+  logSecurityEvent('booking.cancel', req, { bookingId: req.params.id });
 
   res.status(200).json({
     status: 'success',
