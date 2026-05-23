@@ -70,6 +70,7 @@
 
 <body
   class="bg-background text-on-surface font-body antialiased selection:bg-primary-container selection:text-on-primary-container overflow-x-hidden">
+  <a href="#page-content" class="skip-link">Skip to main content</a>
   <div id="app">
     <div id="layout" class="relative group">
       <aside id="sidebar"
@@ -78,10 +79,10 @@
       <header id="persistent-header"
         class="sticky top-0 w-full z-40 bg-[#fcf9f8]/70 backdrop-blur-xl flex justify-between items-center px-8 py-4 shadow-[0_20px_40px_rgba(28,27,27,0.03)] border-b border-zinc-100 hidden">
       </header>
-      <main id="page-content" class="min-h-screen transition-all lg:ml-72"></main>
+      <main id="page-content" class="min-h-screen transition-all lg:ml-72" tabindex="-1"></main>
     </div>
   </div>
-  <div id="toast-container" class="fixed top-6 right-6 z-[200] flex flex-col gap-3"></div>
+  <div id="toast-container" class="fixed top-6 right-6 z-[200] flex flex-col gap-3" aria-live="polite" aria-atomic="true"></div>
   <div id="modal-container"></div>
   <script type="module" src="/src/main.js"></script>
   <script>

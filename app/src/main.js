@@ -204,6 +204,7 @@ function initMobileNavigation() {
     sidebar.classList.add('-translate-x-full');
     backdrop.classList.remove('open');
     button.setAttribute('aria-expanded', 'false');
+    button.setAttribute('aria-label', 'Open navigation');
   };
 
   const open = () => {
@@ -211,6 +212,7 @@ function initMobileNavigation() {
     sidebar.classList.add('translate-x-0');
     backdrop.classList.add('open');
     button.setAttribute('aria-expanded', 'true');
+    button.setAttribute('aria-label', 'Close navigation');
   };
 
   button.addEventListener('click', () => {

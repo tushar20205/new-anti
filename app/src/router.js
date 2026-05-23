@@ -126,6 +126,7 @@ class Router {
       requestAnimationFrame(() => {
         requestAnimationFrame(() => {
           pageContainer.classList.remove('page-enter');
+          pageContainer.focus({ preventScroll: true });
         });
       });
     }
