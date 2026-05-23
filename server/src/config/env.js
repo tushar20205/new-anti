@@ -1,4 +1,5 @@
 const requiredVars = ['MONGODB_URI', 'JWT_SECRET', 'JWT_REFRESH_SECRET'];
+const { getAllowedOrigins } = require('../utils/allowedOrigins');
 
 const insecureSecretValues = new Set([
   'skillswap-jwt-secret-change-me-in-production',
@@ -9,12 +10,6 @@ const insecureSecretValues = new Set([
 
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const isProduction = NODE_ENV === 'production';
-const DEFAULT_CLIENT_ORIGINS = [
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'https://skill-switch-new.vercel.app',
-  'https://skill-switch-new-2q57.vercel.app'
-];
 
 function fail(message) {
   console.error(`[env] ${message}`);
@@ -49,16 +44,6 @@ if (isProduction) {
   });
 }
 
-function parseOrigins(value) {
-  return [
-    ...DEFAULT_CLIENT_ORIGINS,
-    ...String(value || '')
-    .split(',')
-    .map((origin) => origin.trim())
-    .filter(Boolean)
-  ].filter((origin, index, origins) => origins.indexOf(origin) === index);
-}
-
 function parseSameSite(value) {
   const normalized = String(value || 'lax').toLowerCase();
   return ['lax', 'strict', 'none'].includes(normalized) ? normalized : 'lax';
@@ -73,7 +58,7 @@ function durationToMs(value, fallbackMs) {
   return amount * multipliers[unit];
 }
 
-const clientOrigins = parseOrigins(process.env.CLIENT_URL);
+const clientOrigins = getAllowedOrigins(process.env.CLIENT_URL);
 const sameSite = parseSameSite(process.env.COOKIE_SAMESITE);
 const isLocalClient = clientOrigins.every((origin) => /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/i.test(origin));
 const cookieSecure = process.env.COOKIE_SECURE

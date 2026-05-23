@@ -16,6 +16,7 @@ const { requestId, sanitizeRequest, suspiciousRequestLogger } = require('./middl
 const errorHandler = require('./middleware/errorHandler');
 const AppError = require('./utils/AppError');
 const { logSecurityEvent } = require('./utils/security');
+const { isOriginAllowed } = require('./utils/allowedOrigins');
 
 
 // Route imports
@@ -37,7 +38,6 @@ const searchRoutes = require('./routes/search.routes');
 
 const app = express();
 app.set('trust proxy', 1);
-const allowedCorsOrigins = new Set(env.CLIENT_ORIGINS);
 
 // ─── Global Middleware ─────────────────────
 
@@ -65,7 +65,7 @@ app.use(helmet({
 // CORS
 app.use(cors({
   origin(origin, callback) {
-    if (!origin || allowedCorsOrigins.has(origin)) {
+    if (isOriginAllowed(origin, env.CLIENT_ORIGINS)) {
       return callback(null, true);
     }
     return callback(new AppError('Not allowed by CORS.', 403));
