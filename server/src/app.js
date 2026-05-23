@@ -37,6 +37,7 @@ const searchRoutes = require('./routes/search.routes');
 
 const app = express();
 app.set('trust proxy', 1);
+const allowedCorsOrigins = new Set(env.CLIENT_ORIGINS);
 
 // ─── Global Middleware ─────────────────────
 
@@ -64,7 +65,7 @@ app.use(helmet({
 // CORS
 app.use(cors({
   origin(origin, callback) {
-    if (!origin || env.CLIENT_ORIGINS.includes(origin)) {
+    if (!origin || allowedCorsOrigins.has(origin)) {
       return callback(null, true);
     }
     return callback(new AppError('Not allowed by CORS.', 403));

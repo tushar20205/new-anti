@@ -9,6 +9,12 @@ const insecureSecretValues = new Set([
 
 const NODE_ENV = process.env.NODE_ENV || 'development';
 const isProduction = NODE_ENV === 'production';
+const DEFAULT_CLIENT_ORIGINS = [
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'https://skill-switch-new.vercel.app',
+  'https://skill-switch-new-2q57.vercel.app'
+];
 
 function fail(message) {
   console.error(`[env] ${message}`);
@@ -44,10 +50,13 @@ if (isProduction) {
 }
 
 function parseOrigins(value) {
-  return String(value || 'http://localhost:5173')
+  return [
+    ...DEFAULT_CLIENT_ORIGINS,
+    ...String(value || '')
     .split(',')
     .map((origin) => origin.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+  ].filter((origin, index, origins) => origins.indexOf(origin) === index);
 }
 
 function parseSameSite(value) {
