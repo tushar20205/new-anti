@@ -9,6 +9,7 @@ import { isAuthenticated } from './services/auth.service.js';
 import { fetchProfile, performLogout } from './services/data.layer.js';
 import { renderSidebar, initSidebar } from './components/sidebar.js';
 import { initChatbot } from './components/chatbot.js';
+import { renderNotificationBell } from './components/notification-center.js';
 import { renderLanding } from './pages/landing.js';
 import { renderDashboard } from './pages/dashboard.js';
 import { renderMarketplace } from './pages/marketplace.js';
@@ -158,19 +159,13 @@ function updateHeaderContent() {
       </button>
       <div id="global-search-dropdown" class="hidden absolute left-0 right-0 top-[calc(100%+0.5rem)] z-[80] bg-white border border-zinc-100 shadow-2xl shadow-zinc-200/70 rounded-2xl overflow-hidden max-h-[70vh]" role="listbox" aria-label="Search results"></div>
     </div>
-    <div class="flex items-center gap-4">
+    <div class="flex shrink-0 items-center gap-3 sm:gap-4">
       <div class="flex items-center gap-2 bg-violet-50 px-4 py-2 rounded-full border border-violet-100 tooltip relative">
         <span class="material-symbols-outlined material-fill text-violet-600 text-sm">generating_tokens</span>
         <span class="text-violet-700 font-bold text-sm" id="header-credits">${credits} Credits</span>
       </div>
-      <div class="relative" id="notification-center-root">
-      <button id="notification-bell" class="p-2 text-zinc-500 hover:bg-neutral-100 rounded-full transition-colors relative" type="button" aria-label="Open notifications" aria-expanded="false" aria-controls="notification-panel">
-        <span class="material-symbols-outlined">notifications</span>
-        <span id="notification-badge" class="hidden absolute -top-0.5 -right-0.5 min-w-5 h-5 px-1 bg-red-500 text-white text-[10px] font-black rounded-full items-center justify-center"></span>
-      </button>
-      <div id="notification-panel" class="hidden absolute right-0 top-[calc(100%+0.5rem)] z-[80] w-[min(24rem,calc(100vw-2rem))] bg-white border border-zinc-100 shadow-2xl shadow-zinc-200/70 rounded-2xl overflow-hidden" role="dialog" aria-label="Notifications"></div>
-      </div>
-      <div class="h-9 w-9 rounded-full overflow-hidden border border-zinc-200">
+      ${renderNotificationBell()}
+      <div class="h-9 w-9 shrink-0 rounded-full overflow-hidden border border-zinc-200">
         <img alt="User avatar" class="w-full h-full object-cover" src="${avatar}" />
       </div>
     </div>
