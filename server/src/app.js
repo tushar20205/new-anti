@@ -33,6 +33,7 @@ const activityRoutes = require('./routes/activity.routes');
 const profileCompletionRoutes = require('./routes/profileCompletion.routes');
 const analyticsRoutes = require('./routes/analytics.routes');
 const communityRoutes = require('./routes/community.routes');
+const searchRoutes = require('./routes/search.routes');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -135,6 +136,7 @@ app.use('/api/activity', activityRoutes);
 app.use('/api/profile-completion', profileCompletionRoutes);
 app.use('/api/analytics', analyticsRoutes);
 app.use('/api/community', communityRoutes);
+app.use('/api/search', searchRoutes);
 
 // ─── 404 Handler ───────────────────────────
 

@@ -79,6 +79,9 @@ async function apiFetch(endpoint, options = {}) {
     // Return safely structured success
     return { data, error: false, status: response.status, message: 'Success' };
   } catch (error) {
+    if (error?.name === 'AbortError') {
+      throw error;
+    }
     console.error(`[API] Fatal Network Error on ${endpoint}:`, error);
     // Return absolutely safe null object on complete network failure
     return { data: null, error: true, status: 0, message: 'Network error. Please check your connection.' };
