@@ -3,7 +3,8 @@
    Reusable fetch wrapper with auth & error handling
    ═══════════════════════════════════════════ */
 
-const API_BASE = '/api';
+const configuredApiBase = import.meta.env?.VITE_API_URL?.trim();
+const API_BASE = (configuredApiBase || '/api').replace(/\/$/, '');
 const REQUEST_TIMEOUT_MS = 15000;
 
 function createRequestSignal(externalSignal) {

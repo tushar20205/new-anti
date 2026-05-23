@@ -80,6 +80,8 @@ Use this checklist before merging `backend` into `main`.
 ## Deployment Readiness
 - Confirm production environment variables are strong and explicit.
 - Confirm `CLIENT_URL` is not wildcarded in production.
+- Confirm hosted frontend sets `VITE_API_URL` when it is not served from the same origin as the API.
 - Confirm refresh cookie settings match the deployed HTTPS domain.
 - Confirm logs include request IDs and no sensitive tokens or passwords.
 - Confirm rate limiting, validation, and JSON error responses behave correctly under bad input.
+- Confirm [../../docs/PRODUCTION_READINESS.md](../../docs/PRODUCTION_READINESS.md) is completed before merging to `main`.
