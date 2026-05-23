@@ -204,6 +204,7 @@ export function renderCreateSession(container) {
     const btn = document.getElementById('create-session-submit');
     const original = btn.innerHTML;
     btn.disabled = true;
+    btn.setAttribute('aria-busy', 'true');
     btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">refresh</span> Publishing...';
 
     try {
@@ -224,6 +225,7 @@ export function renderCreateSession(container) {
     } catch (err) {
       showToast(err.message || 'Failed to create session.', 'error');
       btn.disabled = false;
+      btn.removeAttribute('aria-busy');
       btn.innerHTML = original;
     }
   });

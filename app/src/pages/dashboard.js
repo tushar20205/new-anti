@@ -346,8 +346,8 @@ export async function renderDashboard(container) {
               ${activityFeed.length === 0 ? `
                 <div class="flex flex-col items-center justify-center py-8 text-center">
                   <span class="material-symbols-outlined text-4xl text-zinc-200 mb-3">check_circle</span>
-                  <p class="text-zinc-500 font-bold text-sm">You're all caught up 🎉</p>
-                  <p class="text-[10px] text-zinc-400 uppercase tracking-widest mt-1">No new alerts</p>
+                  <p class="text-zinc-500 font-bold text-sm">You're all caught up</p>
+                  <p class="text-[10px] text-zinc-400 uppercase tracking-widest mt-1">New booking, review, and credit updates will appear here.</p>
                 </div>
               ` : activityFeed.slice(0, 5).map(n => {
       const nc = colorMap[n.color] || colorMap.violet;
@@ -514,6 +514,7 @@ export async function renderDashboard(container) {
       const matchingButtons = document.querySelectorAll(`.booking-action[data-booking-id="${id}"]`);
       matchingButtons.forEach(actionBtn => {
         actionBtn.disabled = true;
+        actionBtn.setAttribute('aria-busy', 'true');
       });
       btn.textContent = action === 'accept' ? 'Accepting...' : action === 'reject' ? 'Rejecting...' : 'Working...';
 
@@ -540,6 +541,7 @@ export async function renderDashboard(container) {
         showToast(err.message || 'Booking action failed', 'error');
         matchingButtons.forEach(actionBtn => {
           actionBtn.disabled = false;
+          actionBtn.removeAttribute('aria-busy');
         });
         btn.textContent = original;
       }
