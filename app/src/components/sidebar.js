@@ -27,7 +27,7 @@ export function renderSidebar() {
   const creditDisplay = credits || 0;
 
   return `
-    <aside class="h-screen w-72 fixed left-0 top-0 bg-[#f6f3f2] flex flex-col z-50 font-['Inter'] tracking-tight antialiased" id="app-sidebar">
+    <aside class="h-screen w-72 fixed left-0 top-0 bg-[#f6f3f2] flex flex-col z-50 font-['Inter'] tracking-tight antialiased -translate-x-full lg:translate-x-0 transition-transform" id="app-sidebar" aria-label="Primary navigation">
       <!-- Logo -->
       <div class="p-6 pb-2">
         <div class="px-2">
@@ -45,7 +45,7 @@ export function renderSidebar() {
       </div>
 
       <!-- Navigation -->
-      <nav class="flex-1 px-4 py-4 overflow-y-auto no-scrollbar space-y-1">
+      <nav class="flex-1 px-4 py-4 overflow-y-auto no-scrollbar space-y-1" aria-label="Main">
         ${navItems.map(item => `
           <a href="${item.path}" class="sidebar-link ${currentHash === item.path ? 'active' : ''}" data-nav="${item.path}">
             <span class="material-symbols-outlined">${item.icon}</span>

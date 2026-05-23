@@ -141,6 +141,9 @@ function updateHeaderContent() {
   const avatar = user?.avatar || 'https://ui-avatars.com/api/?name=U&background=6927ef&color=fff';
 
   headerEl.innerHTML = `
+    <button id="mobile-menu-btn" class="lg:hidden inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white border border-zinc-100 text-zinc-700 shadow-sm" type="button" aria-label="Open navigation" aria-controls="app-sidebar" aria-expanded="false">
+      <span class="material-symbols-outlined text-xl">menu</span>
+    </button>
     <div class="relative w-full max-w-md" id="global-search-root">
       <span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-zinc-400 text-lg pointer-events-none">search</span>
       <input
@@ -179,6 +182,49 @@ function updateHeaderContent() {
 
   initGlobalSearch();
   initNotificationCenter();
+  initMobileNavigation();
+}
+
+function initMobileNavigation() {
+  const sidebar = document.getElementById('app-sidebar');
+  const button = document.getElementById('mobile-menu-btn');
+  if (!sidebar || !button || button.dataset.ready === 'true') return;
+  button.dataset.ready = 'true';
+
+  let backdrop = document.getElementById('mobile-sidebar-backdrop');
+  if (!backdrop) {
+    backdrop = document.createElement('div');
+    backdrop.id = 'mobile-sidebar-backdrop';
+    backdrop.className = 'mobile-sidebar-backdrop lg:hidden';
+    document.body.appendChild(backdrop);
+  }
+
+  const close = () => {
+    sidebar.classList.remove('translate-x-0');
+    sidebar.classList.add('-translate-x-full');
+    backdrop.classList.remove('open');
+    button.setAttribute('aria-expanded', 'false');
+  };
+
+  const open = () => {
+    sidebar.classList.remove('-translate-x-full');
+    sidebar.classList.add('translate-x-0');
+    backdrop.classList.add('open');
+    button.setAttribute('aria-expanded', 'true');
+  };
+
+  button.addEventListener('click', () => {
+    const isOpen = button.getAttribute('aria-expanded') === 'true';
+    if (isOpen) close();
+    else open();
+  });
+
+  backdrop.addEventListener('click', close);
+  sidebar.querySelectorAll('a[href^="#/"]').forEach((link) => {
+    link.addEventListener('click', () => {
+      if (window.matchMedia('(max-width: 1023px)').matches) close();
+    });
+  });
 }
 
 function escapeHtml(value = '') {
