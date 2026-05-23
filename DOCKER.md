@@ -78,7 +78,8 @@ docker compose down -v
 
 - Do not use `.env.docker.example` values in production.
 - Use managed MongoDB Atlas or another replica-set/mongos deployment for production.
-- Set `CLIENT_URL` to the deployed frontend origin when the API is deployed separately.
+- CORS allows the local Docker frontend at `http://localhost:8080`, local Vite at `http://localhost:5173`, the known Vercel frontend origins, and any origin added through `CLIENT_URL`.
+- Set `CLIENT_URL` to the deployed frontend origin when the API is deployed separately. Comma-separated values are supported.
 - Keep uploads on persistent storage. The compose setup uses the `uploads-data` volume locally.
 - The frontend container proxies `/api` and `/uploads` to the backend service for simple single-origin local demos.
 

@@ -1,5 +1,6 @@
 import { store } from '../state.js';
 import { showToast } from '../components/toast.js';
+import { renderEmptyState, renderErrorState } from '../components/status-state.js';
 
 const showcaseMentors = [
   {
@@ -179,10 +180,14 @@ async function loadApiSessions() {
 
     if (sessions.length === 0) {
       grid.innerHTML = `
-        <div class="lg:col-span-2 text-center py-16 bg-white rounded-2xl border border-zinc-100 shadow-sm">
-          <span class="material-symbols-outlined text-4xl text-zinc-300 mb-3">event_busy</span>
-          <h3 class="text-lg font-black text-zinc-900">No open sessions right now</h3>
-          <p class="text-sm text-zinc-500 mt-2">Create a session from the backend/API flow, then learners can book it here.</p>
+        <div class="lg:col-span-2">
+          ${renderEmptyState({
+            icon: 'event_busy',
+            title: 'No open sessions right now',
+            message: 'When mentors publish sessions, they will appear here with real booking and escrow support.',
+            actionHref: '#/create-session',
+            actionLabel: 'Create a session'
+          })}
         </div>
       `;
       return;
@@ -196,20 +201,27 @@ async function loadApiSessions() {
     if (countEl) countEl.textContent = 'Error loading';
     if (grid) {
       grid.innerHTML = `
-        <div class="lg:col-span-2 text-center py-12 bg-white rounded-2xl border border-zinc-100">
-          <span class="material-symbols-outlined text-red-500 text-4xl mb-4">wifi_off</span>
-          <p class="text-zinc-700 font-black">Unable to fetch sessions</p>
-          <p class="text-zinc-400 text-sm mt-1">Please check the API server and try again.</p>
+        <div class="lg:col-span-2">
+          ${renderErrorState({
+            title: 'Unable to fetch sessions',
+            message: 'Check your connection or API server, then try again.',
+            retryId: 'retry-sessions'
+          })}
         </div>
       `;
+      document.getElementById('retry-sessions')?.addEventListener('click', loadApiSessions);
     }
   }
 }
 
 async function handleBookSession(btn) {
+  if (btn.dataset.pending === 'true') return;
+
   const sessionId = btn.dataset.sessionId;
   const originalText = btn.textContent;
+  btn.dataset.pending = 'true';
   btn.disabled = true;
+  btn.setAttribute('aria-busy', 'true');
   btn.textContent = 'Reserving escrow...';
 
   try {
@@ -223,6 +235,8 @@ async function handleBookSession(btn) {
     showToast('Booking requested. Credits are now reserved in escrow.', 'success');
   } catch (err) {
     btn.disabled = false;
+    btn.removeAttribute('aria-busy');
+    delete btn.dataset.pending;
     btn.textContent = originalText;
     showToast(err.message || 'Failed to request booking', 'error');
   }

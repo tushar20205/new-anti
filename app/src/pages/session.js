@@ -7,6 +7,7 @@
 import { store } from '../state.js';
 import { showToast } from '../components/toast.js';
 import { fetchMyBookings } from '../services/data.layer.js';
+import { renderInlineLoader } from '../components/status-state.js';
 
 let countdownInterval = null;
 
@@ -27,10 +28,7 @@ export async function renderSession(container) {
   // Show loading
   container.innerHTML = `
     <div class="pt-12 px-12 pb-24 max-w-[1200px] mx-auto flex items-center justify-center min-h-[60vh]">
-      <div class="flex flex-col items-center gap-4">
-        <span class="material-symbols-outlined animate-spin text-4xl text-primary">refresh</span>
-        <p class="text-zinc-400 font-medium">Loading sessions...</p>
-      </div>
+      ${renderInlineLoader('Loading your booked sessions...')}
     </div>
   `;
 
@@ -272,6 +270,7 @@ export async function renderSession(container) {
 
       matchingButtons.forEach(actionBtn => {
         actionBtn.disabled = true;
+        actionBtn.setAttribute('aria-busy', 'true');
         actionBtn.classList.add('opacity-60', 'cursor-not-allowed');
       });
       btn.textContent = action === 'accept' ? 'Accepting...' : 'Rejecting...';
@@ -287,6 +286,7 @@ export async function renderSession(container) {
         showToast(err.message || 'Booking action failed', 'error');
         matchingButtons.forEach(actionBtn => {
           actionBtn.disabled = false;
+          actionBtn.removeAttribute('aria-busy');
           actionBtn.classList.remove('opacity-60', 'cursor-not-allowed');
         });
         btn.textContent = original;
