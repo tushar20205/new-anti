@@ -510,9 +510,12 @@ export async function renderDashboard(container) {
     btn.addEventListener('click', async () => {
       const id = btn.dataset.bookingId;
       const action = btn.dataset.action;
+      if (!id || btn.dataset.pending === 'true') return;
+
       const original = btn.textContent;
       const matchingButtons = document.querySelectorAll(`.booking-action[data-booking-id="${id}"]`);
       matchingButtons.forEach(actionBtn => {
+        actionBtn.dataset.pending = 'true';
         actionBtn.disabled = true;
         actionBtn.setAttribute('aria-busy', 'true');
       });
@@ -542,6 +545,7 @@ export async function renderDashboard(container) {
         matchingButtons.forEach(actionBtn => {
           actionBtn.disabled = false;
           actionBtn.removeAttribute('aria-busy');
+          delete actionBtn.dataset.pending;
         });
         btn.textContent = original;
       }

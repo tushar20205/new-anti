@@ -62,6 +62,18 @@ const handleMulterError = (err) => {
   return { statusCode: 400, status: 'fail', message: 'Invalid file upload.' };
 };
 
+const handlePayloadTooLarge = () => ({
+  statusCode: 413,
+  status: 'fail',
+  message: 'Request payload is too large.'
+});
+
+const handleMalformedJson = () => ({
+  statusCode: 400,
+  status: 'fail',
+  message: 'Malformed JSON request body.'
+});
+
 // ─── Main Error Handler ────────────────────
 
 const errorHandler = (err, req, res, next) => {
@@ -112,6 +124,20 @@ const errorHandler = (err, req, res, next) => {
     message = handled.message;
   }
 
+  if (err.type === 'entity.too.large') {
+    const handled = handlePayloadTooLarge();
+    statusCode = handled.statusCode;
+    status = handled.status;
+    message = handled.message;
+  }
+
+  if (err.type === 'entity.parse.failed') {
+    const handled = handleMalformedJson();
+    statusCode = handled.statusCode;
+    status = handled.status;
+    message = handled.message;
+  }
+
   if (statusCode === 401 || statusCode === 403 || statusCode === 429) {
     logSecurityEvent('request.rejected', req, { statusCode, reason: message });
   }
@@ -129,7 +155,7 @@ const errorHandler = (err, req, res, next) => {
   }
 
   // Production: send clean error
-  if (err.isOperational) {
+  if (err.isOperational || statusCode < 500) {
     return res.status(statusCode).json({ status, message, requestId: req.id });
   }
 

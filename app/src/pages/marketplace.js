@@ -215,8 +215,11 @@ async function loadApiSessions() {
 }
 
 async function handleBookSession(btn) {
+  if (btn.dataset.pending === 'true') return;
+
   const sessionId = btn.dataset.sessionId;
   const originalText = btn.textContent;
+  btn.dataset.pending = 'true';
   btn.disabled = true;
   btn.setAttribute('aria-busy', 'true');
   btn.textContent = 'Reserving escrow...';
@@ -233,6 +236,7 @@ async function handleBookSession(btn) {
   } catch (err) {
     btn.disabled = false;
     btn.removeAttribute('aria-busy');
+    delete btn.dataset.pending;
     btn.textContent = originalText;
     showToast(err.message || 'Failed to request booking', 'error');
   }
