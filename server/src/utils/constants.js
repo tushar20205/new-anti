@@ -40,7 +40,15 @@ module.exports = {
     CREDIT: 'credit',
     REVIEW: 'review',
     COMMUNITY: 'community',
-    SYSTEM: 'system'
+    SYSTEM: 'system',
+    BOOKING_REQUESTED: 'booking_requested',
+    BOOKING_ACCEPTED: 'booking_accepted',
+    BOOKING_COMPLETED: 'booking_completed',
+    CREDITS_RELEASED: 'credits_released',
+    MENTOR_APPLICATION_UPDATE: 'mentor_application_update',
+    REVIEW_RECEIVED: 'review_received',
+    REFERRAL_REWARD: 'referral_reward',
+    ASSIGNMENT_UPDATE: 'assignment_update'
   },
 
   // Skill categories

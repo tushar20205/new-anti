@@ -102,7 +102,7 @@ export async function renderDashboard(container) {
 
     if (notifData.status === 'fulfilled') {
       const raw = notifData.value;
-      notifications = Array.isArray(raw) ? raw : [];
+      notifications = Array.isArray(raw) ? raw : (raw?.notifications || []);
       store.setNotificationsFromAPI(notifications);
     }
 
