@@ -1,243 +1,99 @@
-import { store } from '../state.js';
-import { showToast } from '../components/toast.js';
-import { renderEmptyState, renderErrorState } from '../components/status-state.js';
+/* ═══════════════════════════════════════════
+   SkillSwap+ — Marketplace Page
+   Source: Stitch "Marketplace | Join Session & Refined Footer"
+   ═══════════════════════════════════════════ */
 
-const showcaseMentors = [
-  {
-    name: 'Elena Rossi',
-    role: 'Product design mentor',
-    skills: ['Design Systems', 'Figma'],
-    avatar: 'https://ui-avatars.com/api/?name=Elena+Rossi&background=7c3aed&color=fff'
-  },
-  {
-    name: 'Marcus Thorne',
-    role: 'Full-stack mentor',
-    skills: ['React', 'DevOps'],
-    avatar: 'https://ui-avatars.com/api/?name=Marcus+Thorne&background=0284c7&color=fff'
-  },
-  {
-    name: 'Sarah Jenkins',
-    role: 'Startup mentor',
-    skills: ['Fundraising', 'Product Strategy'],
-    avatar: 'https://ui-avatars.com/api/?name=Sarah+Jenkins&background=059669&color=fff'
-  }
-];
+import { getFooterHTML } from '../components/footer.js';
 
-function renderShowcaseMentor(mentor) {
-  return `
-    <div class="bg-white rounded-2xl border border-zinc-100 p-6 shadow-sm">
-      <div class="flex items-center gap-4 mb-5">
-        <img class="w-14 h-14 rounded-xl object-cover" src="${mentor.avatar}" alt="${mentor.name}" />
-        <div>
-          <h3 class="font-black text-zinc-900">${mentor.name}</h3>
-          <p class="text-xs text-zinc-500">${mentor.role}</p>
-        </div>
-      </div>
-      <div class="flex flex-wrap gap-2 mb-5">
-        ${mentor.skills.map(skill => `<span class="bg-zinc-100 text-zinc-600 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase">${skill}</span>`).join('')}
-      </div>
-      <button class="scroll-live-sessions w-full bg-primary text-white py-3 rounded-full text-xs font-black shadow-lg shadow-primary/20">
-        View Live Sessions
-      </button>
-    </div>
-  `;
-}
-
-function renderSessionCard(session) {
-  const currentUserId = store.getUserSafe()?._id;
-  const hostId = session.host?._id || session.host;
-  const participantIds = (session.participants || []).map((participant) => participant?._id || participant);
-  const isOwnSession = currentUserId && hostId && String(hostId) === String(currentUserId);
-  const isAlreadyParticipant = currentUserId && participantIds.some((id) => String(id) === String(currentUserId));
-  const hostName = session.host?.name || 'Mentor';
-  const hostAvatar = session.host?.profilePicture || `https://ui-avatars.com/api/?name=${encodeURIComponent(hostName)}&background=6927ef&color=fff`;
-  const sessionDate = session.date ? new Date(session.date).toLocaleDateString('en', { month: 'short', day: 'numeric' }) : 'TBD';
-  const spotsLeft = Math.max((session.maxParticipants || 1) - ((session.participants || []).length), 0);
-  const bookingDisabled = isOwnSession || isAlreadyParticipant || spotsLeft <= 0;
-  const bookingLabel = isOwnSession
-    ? 'Your Session'
-    : isAlreadyParticipant
-      ? 'Already Joined'
-      : spotsLeft <= 0
-        ? 'Full'
-        : 'Request Booking';
-
-  return `
-    <article class="bg-white rounded-2xl border border-zinc-100 p-6 shadow-sm hover:shadow-xl hover:shadow-zinc-200/40 transition-all">
-      <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-5">
-        <div class="flex items-center gap-4">
-          <img class="w-12 h-12 rounded-xl object-cover" src="${hostAvatar}" alt="${hostName}" />
-          <div>
-            <h3 class="font-black text-zinc-900">${session.title}</h3>
-            <p class="text-xs text-zinc-500">${hostName} • ${session.skillCategory || 'General'}</p>
-          </div>
-        </div>
-        <span class="self-start bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full text-[9px] font-black uppercase">${session.status}</span>
-      </div>
-      <p class="text-sm text-zinc-500 line-clamp-2 mb-5">${session.description || 'No description provided.'}</p>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5 text-xs">
-        <div class="bg-zinc-50 rounded-xl p-3">
-          <p class="text-zinc-400 font-black uppercase text-[9px]">Date</p>
-          <p class="font-bold text-zinc-800">${sessionDate}</p>
-        </div>
-        <div class="bg-zinc-50 rounded-xl p-3">
-          <p class="text-zinc-400 font-black uppercase text-[9px]">Time</p>
-          <p class="font-bold text-zinc-800">${session.startTime || '--:--'}-${session.endTime || '--:--'}</p>
-        </div>
-        <div class="bg-zinc-50 rounded-xl p-3">
-          <p class="text-zinc-400 font-black uppercase text-[9px]">Escrow</p>
-          <p class="font-bold text-primary">${session.creditsRequired} credits</p>
-        </div>
-        <div class="bg-zinc-50 rounded-xl p-3">
-          <p class="text-zinc-400 font-black uppercase text-[9px]">Spots</p>
-          <p class="font-bold text-zinc-800">${spotsLeft} left</p>
-        </div>
-      </div>
-      <button class="book-session-btn w-full bg-primary text-white py-3 rounded-full text-sm font-black shadow-lg shadow-primary/20 disabled:opacity-60 disabled:cursor-not-allowed" data-session-id="${session._id}" ${bookingDisabled ? 'disabled' : ''}>
-        ${bookingLabel}
-      </button>
-    </article>
-  `;
-}
-
-export async function renderMarketplace(container) {
-  const credits = store.get('credits') || 0;
-
+export function renderMarketplace(container) {
   container.innerHTML = `
-    <div class="min-h-screen px-4 sm:px-6 lg:px-12 py-12 max-w-[1400px] mx-auto">
-      <header class="mb-12 flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-        <div>
-          <nav class="flex items-center gap-2 text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-4">
+    <div class="bg-surface text-ink-black font-body-md">
+      <main class="flex-grow w-full max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop py-12 flex flex-col gap-16">
+        <!-- Hero -->
+        <section class="flex flex-col gap-6">
+          <div class="flex items-center gap-2 font-label-md text-label-md uppercase text-rust-accent">
             <span>Marketplace</span>
-            <span class="material-symbols-outlined text-[10px]">chevron_right</span>
-            <span class="text-primary">Real Bookings</span>
-          </nav>
-          <h1 class="text-4xl lg:text-5xl font-black tracking-tight text-zinc-900 mb-4">Book real skill sessions.</h1>
-          <p class="text-zinc-500 text-base lg:text-lg max-w-2xl leading-relaxed">Credits are reserved in escrow when you request a session and released to the mentor only after completion.</p>
-        </div>
-        <div class="bg-white px-6 py-4 rounded-2xl shadow-sm border border-zinc-100">
-          <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest block">Available Balance</span>
-          <span class="text-xl font-black text-zinc-900" id="marketplace-credits">${credits} Credits</span>
-        </div>
-      </header>
+            <span class="material-symbols-outlined text-[16px]">chevron_right</span>
+            <span>Real Bookings</span>
+          </div>
+          <h1 class="font-display-lg text-display-lg uppercase border-b-2 border-ink-black pb-4" style="font-family:'Oswald',sans-serif;">Book real skill sessions.</h1>
+          <p class="font-body-lg text-body-lg max-w-3xl">Credits are reserved in escrow when you request a session and released to the mentor only after completion. Secure, vetted, and built for professionals.</p>
+        </section>
 
-      <section class="mb-12 rounded-2xl border border-emerald-100 bg-emerald-50 px-5 py-4 flex items-start gap-3">
-        <span class="material-symbols-outlined text-emerald-600">verified</span>
-        <div>
-          <p class="text-sm font-black text-emerald-800">Backend-driven booking lifecycle</p>
-          <p class="text-xs text-emerald-700 mt-1">Request → escrow reserved → mentor accepts → Jitsi link generated → completion releases credits.</p>
-        </div>
-      </section>
+        <!-- Booking Lifecycle -->
+        <section class="bg-tertiary-fixed border-2 border-ink-black p-6">
+          <div class="flex flex-col md:flex-row items-start md:items-center gap-4">
+            <div class="flex items-center gap-3">
+              <span class="material-symbols-outlined text-deep-forest text-3xl" style="font-variation-settings:'FILL' 1;">verified_user</span>
+              <h3 class="font-headline-sm text-headline-sm text-deep-forest uppercase">Backend-driven booking lifecycle</h3>
+            </div>
+            <div class="hidden md:block flex-grow border-t-2 border-dashed border-deep-forest/50 mx-4"></div>
+            <div class="font-label-md text-label-md uppercase text-ink-black flex flex-wrap items-center gap-2">
+              <span>Request</span> <span class="material-symbols-outlined text-[16px]">arrow_right_alt</span>
+              <span>Escrow reserved</span> <span class="material-symbols-outlined text-[16px]">arrow_right_alt</span>
+              <span>Mentor accepts</span> <span class="material-symbols-outlined text-[16px]">arrow_right_alt</span>
+              <span>Jitsi link generated</span> <span class="material-symbols-outlined text-[16px]">arrow_right_alt</span>
+              <span class="text-deep-forest font-bold">Completion releases credits</span>
+            </div>
+          </div>
+        </section>
 
-      <section class="mb-14">
-        <div class="flex items-center justify-between mb-6">
-          <h2 class="text-xl font-black text-zinc-900">Mentor Highlights</h2>
-          <span class="text-xs text-zinc-400 font-bold">Book from live sessions below</span>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-          ${showcaseMentors.map(renderShowcaseMentor).join('')}
-        </div>
-      </section>
+        <!-- Mentor Highlights -->
+        <section class="flex flex-col gap-8">
+          <div class="flex justify-between items-end border-b-2 border-ink-black pb-2">
+            <h2 class="font-headline-md text-headline-md uppercase" style="font-family:'Oswald',sans-serif;">Mentor Highlights</h2>
+            <span class="font-label-md text-label-md uppercase text-surface-variant bg-ink-black px-2 py-1">Book from live sessions below</span>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+            ${[
+              { initials: 'ER', name: 'Elena Rossi', role: 'Product Design Mentor', skills: ['Design Systems', 'Figma'], bg: 'bg-primary-fixed' },
+              { initials: 'MT', name: 'Marcus Thorne', role: 'Full-Stack Mentor', skills: ['React', 'DevOps'], bg: 'bg-tertiary-fixed' },
+              { initials: 'SJ', name: 'Sarah Jenkins', role: 'Startup Mentor', skills: ['Fundraising', 'Product Strategy'], bg: 'bg-primary-fixed' }
+            ].map(m => `
+              <div class="bg-paper-base border-2 border-ink-black flex flex-col p-6 gap-6">
+                <div class="flex items-center gap-4 border-b-2 border-ink-black pb-4">
+                  <div class="w-16 h-16 rounded-full border-2 border-ink-black overflow-hidden ${m.bg} flex items-center justify-center font-headline-md text-headline-md" style="font-family:'Oswald',sans-serif;">${m.initials}</div>
+                  <div>
+                    <h3 class="font-headline-sm text-headline-sm uppercase" style="font-family:'Oswald',sans-serif;">${m.name}</h3>
+                    <p class="font-body-md text-body-md">${m.role}</p>
+                  </div>
+                </div>
+                <div class="flex flex-wrap gap-2">
+                  ${m.skills.map((s, i) => `<span class="font-label-md text-label-md uppercase border-2 border-ink-black px-2 py-1 ${i === 0 ? 'bg-secondary-fixed' : 'bg-surface-variant'}">${s}</span>`).join('')}
+                </div>
+                <button class="bg-rust-accent text-paper-base border-2 border-ink-black font-headline-sm text-headline-sm uppercase px-6 py-2 w-full mt-auto shadow-hard hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all" style="font-family:'Oswald',sans-serif;">View Live Sessions</button>
+              </div>
+            `).join('')}
+          </div>
+        </section>
 
-      <section id="api-sessions-section">
-        <div class="flex items-center justify-between mb-6">
-          <h2 class="text-2xl font-black text-zinc-900">Available Sessions</h2>
-          <span class="text-xs text-zinc-400 font-bold" id="sessions-count">Loading...</span>
-        </div>
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="api-sessions-grid">
-          <div class="h-48 bg-zinc-100 rounded-2xl animate-pulse"></div>
-          <div class="h-48 bg-zinc-100 rounded-2xl animate-pulse"></div>
-        </div>
-      </section>
+        <!-- Available Sessions -->
+        <section class="flex flex-col gap-8 mb-12">
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-end border-b-2 border-ink-black pb-2 gap-4">
+            <h2 class="font-headline-md text-headline-md uppercase" style="font-family:'Oswald',sans-serif;">Available Sessions</h2>
+            <div class="flex items-center gap-4 w-full md:w-auto">
+              <div class="relative flex-grow md:w-64">
+                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-ink-black/50">search</span>
+                <input class="w-full bg-paper-base border-2 border-ink-black pl-10 pr-4 py-2 font-label-md text-label-md uppercase focus:outline-none focus:ring-0 focus:border-rust-accent" placeholder="SEARCH SESSIONS..." type="text" />
+              </div>
+            </div>
+          </div>
+          <div class="flex gap-2 overflow-x-auto pb-4 no-scrollbar">
+            ${['All', 'UI Design', 'React', 'Strategy', 'Marketing', 'Backend'].map((t, i) => `
+              <button class="font-label-md text-label-md uppercase border-2 border-ink-black px-2 py-1 ${i === 0 ? 'bg-ink-black text-paper-base' : 'bg-paper-base hover:bg-surface-variant'} whitespace-nowrap">${t}</button>
+            `).join('')}
+          </div>
+          <div class="bg-surface-bright border-dashed border-2 border-ink-black p-16 flex flex-col items-center justify-center text-center relative overflow-hidden">
+            <div class="relative z-10">
+              <span class="material-symbols-outlined text-6xl text-ink-black/20 mb-6 block">event_busy</span>
+              <h3 class="font-headline-md text-headline-md uppercase mb-2" style="font-family:'Oswald',sans-serif;">No open sessions right now</h3>
+              <p class="font-body-lg text-body-lg text-ink-black/70 max-w-lg mb-8 mx-auto">When mentors publish sessions, they will appear here with real-time booking and secure escrow support.</p>
+              <a href="#/create-session" class="bg-rust-accent text-paper-base border-2 border-ink-black font-headline-sm text-headline-sm uppercase px-6 py-2 shadow-hard hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all inline-flex items-center gap-2" style="text-decoration:none;font-family:'Oswald',sans-serif;"><span class="material-symbols-outlined text-xl">add</span> CREATE A SESSION</a>
+            </div>
+          </div>
+        </section>
+      </main>
+      ${getFooterHTML()}
     </div>
   `;
-
-  document.querySelectorAll('.scroll-live-sessions').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.getElementById('api-sessions-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-  });
-
-  await loadApiSessions();
-
-  return store.on('credits', (c) => {
-    const el = document.getElementById('marketplace-credits');
-    if (el) el.textContent = `${c} Credits`;
-  });
-}
-
-async function loadApiSessions() {
-  const grid = document.getElementById('api-sessions-grid');
-  const countEl = document.getElementById('sessions-count');
-
-  try {
-    const { getSessions } = await import('../services/session.service.js');
-    const data = await getSessions({ status: 'open' });
-    const sessions = data?.sessions || [];
-
-    if (countEl) countEl.textContent = `${sessions.length} session${sessions.length === 1 ? '' : 's'} available`;
-    if (!grid) return;
-
-    if (sessions.length === 0) {
-      grid.innerHTML = `
-        <div class="lg:col-span-2">
-          ${renderEmptyState({
-            icon: 'event_busy',
-            title: 'No open sessions right now',
-            message: 'When mentors publish sessions, they will appear here with real booking and escrow support.',
-            actionHref: '#/create-session',
-            actionLabel: 'Create a session'
-          })}
-        </div>
-      `;
-      return;
-    }
-
-    grid.innerHTML = sessions.map(renderSessionCard).join('');
-    document.querySelectorAll('.book-session-btn').forEach(btn => {
-      btn.addEventListener('click', async () => handleBookSession(btn));
-    });
-  } catch (err) {
-    if (countEl) countEl.textContent = 'Error loading';
-    if (grid) {
-      grid.innerHTML = `
-        <div class="lg:col-span-2">
-          ${renderErrorState({
-            title: 'Unable to fetch sessions',
-            message: 'Check your connection or API server, then try again.',
-            retryId: 'retry-sessions'
-          })}
-        </div>
-      `;
-      document.getElementById('retry-sessions')?.addEventListener('click', loadApiSessions);
-    }
-  }
-}
-
-async function handleBookSession(btn) {
-  if (btn.dataset.pending === 'true') return;
-
-  const sessionId = btn.dataset.sessionId;
-  const originalText = btn.textContent;
-  btn.dataset.pending = 'true';
-  btn.disabled = true;
-  btn.setAttribute('aria-busy', 'true');
-  btn.textContent = 'Reserving escrow...';
-
-  try {
-    const { createBooking } = await import('../services/booking.service.js');
-    await createBooking(sessionId);
-    const { fetchProfile, fetchMyBookings } = await import('../services/data.layer.js');
-    await Promise.all([fetchProfile(), fetchMyBookings()]);
-    btn.textContent = 'Requested';
-    btn.classList.remove('bg-primary');
-    btn.classList.add('bg-zinc-300', 'text-zinc-600');
-    showToast('Booking requested. Credits are now reserved in escrow.', 'success');
-  } catch (err) {
-    btn.disabled = false;
-    btn.removeAttribute('aria-busy');
-    delete btn.dataset.pending;
-    btn.textContent = originalText;
-    showToast(err.message || 'Failed to request booking', 'error');
-  }
 }

@@ -1,260 +1,96 @@
 /* ═══════════════════════════════════════════
    SkillSwap+ — Mentor Application Page
    ═══════════════════════════════════════════ */
-
-import { store } from '../state.js';
+import { getFooterHTML } from '../components/footer.js';
 import { showToast } from '../components/toast.js';
-import { showModal } from '../components/modal.js';
 
 export function renderMentorApply(container) {
-  const application = store.get('mentorApplication');
-
-  if (application.status === 'pending') {
-    container.innerHTML = renderPendingState();
-    return;
-  }
-
-  if (application.status === 'approved') {
-    container.innerHTML = renderApprovedState();
-    return;
-  }
-
-  let currentStep = application.step || 1;
-  renderStep(container, currentStep);
-}
-
-function renderPendingState() {
-  return `
-    <div class="pt-12 px-12 pb-24 max-w-[800px] mx-auto text-center stagger-children">
-      <div class="w-28 h-28 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-8">
-        <span class="material-symbols-outlined text-amber-600 text-5xl">hourglass_top</span>
-      </div>
-      <h1 class="text-4xl font-black tracking-tight text-zinc-900 mb-4">Application Under Review</h1>
-      <p class="text-zinc-500 text-lg max-w-md mx-auto mb-8">Our team is reviewing your mentor application. You'll be notified once a decision is made.</p>
-      <div class="bg-white rounded-2xl border border-zinc-100 p-8 shadow-sm max-w-md mx-auto">
-        <div class="flex items-center justify-between mb-4">
-          <span class="text-sm font-bold text-zinc-900">Application Status</span>
-          <span class="bg-amber-100 text-amber-700 px-3 py-1 rounded-full text-xs font-black">Pending Review</span>
-        </div>
-        <div class="xp-bar">
-          <div class="xp-bar-fill" style="width: 60%"></div>
-        </div>
-        <p class="text-xs text-zinc-400 mt-3">Estimated review time: 2-3 business days</p>
-      </div>
-      <a href="#/dashboard" class="inline-block mt-8 px-8 py-3.5 bg-zinc-100 text-zinc-600 rounded-full font-bold text-sm hover:bg-zinc-200 transition-all btn-press">Back to Dashboard</a>
-    </div>
-  `;
-}
-
-function renderApprovedState() {
-  return `
-    <div class="pt-12 px-12 pb-24 max-w-[800px] mx-auto text-center stagger-children">
-      <div class="w-28 h-28 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-8">
-        <span class="material-symbols-outlined material-fill text-emerald-600 text-5xl">verified</span>
-      </div>
-      <h1 class="text-4xl font-black tracking-tight text-zinc-900 mb-4">You're Approved! 🎉</h1>
-      <p class="text-zinc-500 text-lg max-w-md mx-auto mb-8">Congratulations! You're now a verified mentor on SkillSwap+. Start teaching to earn credits.</p>
-      <a href="#/dashboard" class="inline-block px-8 py-4 bg-primary text-white rounded-full font-bold text-sm shadow-lg shadow-primary/20 hover:scale-105 btn-press">Go to Dashboard</a>
-    </div>
-  `;
-}
-
-function renderStep(container, step) {
   container.innerHTML = `
-    <div class="pt-12 px-12 pb-24 max-w-[900px] mx-auto">
-      <div class="mb-12 stagger-children">
-        <nav class="flex items-center gap-2 text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-4">
-          <a href="#/dashboard" class="hover:text-primary transition-colors">Dashboard</a>
-          <span class="material-symbols-outlined text-[10px]">chevron_right</span>
-          <span class="text-primary">Become a Mentor</span>
-        </nav>
-        <h1 class="text-4xl font-black tracking-tight text-zinc-900 mb-2">Mentor Application</h1>
-        <p class="text-zinc-500 text-lg">Share your expertise with the community and earn credits.</p>
-      </div>
+    <div class="bg-surface text-ink-black font-body-md">
+      <main class="max-w-[1280px] mx-auto px-margin-desktop py-12 flex flex-col gap-12">
+        <section>
+          <h1 class="font-display-lg text-headline-lg uppercase border-b-2 border-ink-black pb-4 mb-6" style="font-family:'Oswald',sans-serif;">Become a Mentor</h1>
+          <p class="font-body-lg text-on-surface-variant max-w-2xl">Share your expertise, earn credits, and help others master new skills. Apply to become a verified mentor in the SkillSwap+ network.</p>
+        </section>
 
-      <!-- Steps Progress -->
-      <div class="flex items-center gap-6 mb-12 stagger-children">
-        ${[
-          { num: 1, label: 'Personal Info' },
-          { num: 2, label: 'Teaching Experience' },
-          { num: 3, label: 'Review & Submit' }
-        ].map(s => `
-          <div class="flex items-center gap-3 ${s.num < step ? 'step-completed' : s.num === step ? 'step-active' : 'step-pending'}">
-            <span class="step-bubble">${s.num < step ? '✓' : s.num}</span>
-            <span class="text-xs font-bold uppercase tracking-widest">${s.label}</span>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+          <div class="lg:col-span-8">
+            <!-- Application Form -->
+            <div class="bg-paper-base border-2 border-ink-black shadow-hard">
+              <div class="p-4 border-b-2 border-ink-black bg-tertiary-fixed">
+                <h2 class="font-label-lg text-paper-base uppercase tracking-widest">Mentor Application</h2>
+              </div>
+              <form class="p-8 space-y-gutter" id="mentor-apply-form">
+                <div class="space-y-2"><label class="font-label-md text-ink-black uppercase block">Areas of Expertise</label><input class="w-full bg-paper-base border-2 border-ink-black p-4 font-body-md focus:border-rust-accent focus:outline-none" placeholder="e.g. UI/UX Design, React, Python" required type="text" id="ma-expertise" /></div>
+                <div class="space-y-2"><label class="font-label-md text-ink-black uppercase block">Years of Experience</label><select class="w-full bg-paper-base border-2 border-ink-black p-4 font-body-md" id="ma-experience"><option>1-3 years</option><option>3-5 years</option><option>5-10 years</option><option>10+ years</option></select></div>
+                <div class="space-y-2"><label class="font-label-md text-ink-black uppercase block">Portfolio / LinkedIn URL</label><input class="w-full bg-paper-base border-2 border-ink-black p-4 font-body-md focus:border-rust-accent focus:outline-none" placeholder="https://your-portfolio.com" type="url" id="ma-portfolio" /></div>
+                <div class="space-y-2"><label class="font-label-md text-ink-black uppercase block">Why do you want to mentor?</label><textarea class="w-full bg-paper-base border-2 border-ink-black p-4 font-body-md focus:border-rust-accent focus:outline-none" rows="5" placeholder="Tell us about your motivation and teaching style..." required id="ma-motivation"></textarea></div>
+                <div class="pt-8 border-t-2 border-ink-black flex justify-between items-center">
+                  <p class="text-label-md font-label-md max-w-xs opacity-70 italic">Applications are reviewed within 48 hours.</p>
+                  <button type="submit" class="bg-rust-accent text-paper-base border-2 border-ink-black px-10 py-4 font-headline-sm uppercase shadow-hard hover:translate-x-0.5 hover:translate-y-0.5 hover:shadow-none transition-all" id="ma-submit-btn" style="font-family:'Oswald',sans-serif;">Submit Application</button>
+                </div>
+              </form>
+            </div>
           </div>
-          ${s.num < 3 ? '<div class="w-12 h-px bg-zinc-200"></div>' : ''}
-        `).join('')}
-      </div>
 
-      <!-- Form Content -->
-      <div class="bg-white rounded-2xl border border-zinc-100 p-10 shadow-sm" id="form-content">
-        ${step === 1 ? renderStep1() : step === 2 ? renderStep2() : renderStep3()}
-      </div>
+          <!-- Benefits Sidebar -->
+          <div class="lg:col-span-4 space-y-gutter">
+            <div class="bg-rust-accent text-paper-base border-2 border-ink-black p-8 shadow-hard relative overflow-hidden">
+              <div class="absolute top-0 right-0 w-24 h-24 bg-paper-base opacity-10 rotate-45 translate-x-10 -translate-y-10"></div>
+              <h3 class="font-headline-sm text-headline-sm uppercase mb-6" style="font-family:'Oswald',sans-serif;">Why Mentor?</h3>
+              <ul class="space-y-4">
+                ${[
+                  { icon: 'toll', text: 'Earn 85-850 credits per session' },
+                  { icon: 'trending_up', text: 'Boost your professional reputation' },
+                  { icon: 'groups', text: 'Join a network of 140,000+ practitioners' },
+                  { icon: 'verified', text: 'Get a verified mentor badge' },
+                  { icon: 'star', text: 'Priority listing in the marketplace' }
+                ].map(b => `
+                  <li class="flex items-start gap-3">
+                    <span class="material-symbols-outlined text-paper-base/80">${b.icon}</span>
+                    <span class="font-body-md">${b.text}</span>
+                  </li>
+                `).join('')}
+              </ul>
+            </div>
 
-      <!-- Navigation Buttons -->
-      <div class="flex justify-between mt-8">
-        ${step > 1 ? `
-          <button id="prev-step-btn" class="bg-zinc-100 text-zinc-600 px-8 py-3.5 rounded-full font-bold text-sm hover:bg-zinc-200 transition-all btn-press">
-            <span class="material-symbols-outlined text-sm align-middle mr-1">arrow_back</span> Previous
-          </button>
-        ` : '<div></div>'}
-        ${step < 3 ? `
-          <button id="next-step-btn" class="bg-primary text-white px-8 py-3.5 rounded-full font-bold text-sm shadow-lg shadow-primary/20 hover:scale-105 btn-press">
-            Next Step <span class="material-symbols-outlined text-sm align-middle ml-1">arrow_forward</span>
-          </button>
-        ` : `
-          <button id="submit-application-btn" class="bg-primary text-white px-10 py-4 rounded-full font-black text-sm shadow-lg shadow-primary/20 hover:scale-105 btn-press flex items-center gap-2">
-            <span class="material-symbols-outlined text-sm">send</span>
-            Submit Application
-          </button>
-        `}
-      </div>
+            <div class="bg-paper-base border-2 border-ink-black p-6 space-y-4">
+              <h4 class="font-headline-sm uppercase border-b-2 border-ink-black pb-2" style="font-family:'Oswald',sans-serif;">Requirements</h4>
+              <ul class="space-y-3 font-body-md">
+                ${['At least 1 year of professional experience', 'Active portfolio or LinkedIn profile', 'Commitment to at least 2 sessions per month', 'Positive attitude and willingness to teach'].map(r => `
+                  <li class="flex gap-3"><span class="w-2 h-2 bg-deep-forest mt-2 shrink-0"></span><span>${r}</span></li>
+                `).join('')}
+              </ul>
+            </div>
+          </div>
+        </div>
+      </main>
+      ${getFooterHTML()}
     </div>
   `;
 
-  // Event listeners
-  document.getElementById('next-step-btn')?.addEventListener('click', () => {
-    step++;
-    store.setMentorApplication({ step });
-    renderStep(container, step);
+  // Form submit
+  document.getElementById('mentor-apply-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('ma-submit-btn');
+    btn.disabled = true; btn.textContent = 'SUBMITTING...';
+    try {
+      const { applyMentor } = await import('../services/user.service.js');
+      await applyMentor({
+        expertise: document.getElementById('ma-expertise').value,
+        experience: document.getElementById('ma-experience').value,
+        portfolio: document.getElementById('ma-portfolio').value,
+        motivation: document.getElementById('ma-motivation').value
+      });
+      showToast('Application submitted! We\'ll review within 48 hours.', 'success');
+      window.location.hash = '/dashboard';
+    } catch (err) { showToast(err.message || 'Failed to submit', 'error'); }
+    finally { btn.disabled = false; btn.textContent = 'SUBMIT APPLICATION'; }
   });
 
-  document.getElementById('prev-step-btn')?.addEventListener('click', () => {
-    step--;
-    store.setMentorApplication({ step });
-    renderStep(container, step);
+  // Label focus effect
+  container.querySelectorAll('input, select, textarea').forEach(input => {
+    input.addEventListener('focus', () => { const label = input.closest('.space-y-2')?.querySelector('label'); if (label) label.classList.add('text-rust-accent'); });
+    input.addEventListener('blur', () => { const label = input.closest('.space-y-2')?.querySelector('label'); if (label) label.classList.remove('text-rust-accent'); });
   });
-
-  document.getElementById('submit-application-btn')?.addEventListener('click', () => {
-    const btn = document.getElementById('submit-application-btn');
-    btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">refresh</span> Submitting...';
-    btn.disabled = true;
-
-    setTimeout(() => {
-      store.setMentorApplication({ status: 'pending', step: 1 });
-      store.addXP(100);
-      store.addCredits(50, 'Mentor Application Bonus');
-      showToast('Application submitted! +100 XP, +50 Credits bonus', 'success');
-      renderMentorApply(container);
-    }, 2000);
-  });
-}
-
-function renderStep1() {
-  return `
-    <h2 class="text-2xl font-black text-zinc-900 mb-8">Personal Information & Skills</h2>
-    <div class="space-y-6">
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label class="text-[10px] uppercase tracking-[0.1em] text-zinc-500 font-black block mb-2">Full Name</label>
-          <input class="w-full p-4 bg-zinc-50 rounded-xl border border-zinc-100 focus:border-primary/30 focus:bg-white transition-all outline-none text-sm font-medium" value="${store.get('user').name}" />
-        </div>
-        <div>
-          <label class="text-[10px] uppercase tracking-[0.1em] text-zinc-500 font-black block mb-2">Email</label>
-          <input class="w-full p-4 bg-zinc-50 rounded-xl border border-zinc-100 focus:border-primary/30 focus:bg-white transition-all outline-none text-sm font-medium" value="${store.get('user').email}" />
-        </div>
-      </div>
-      <div>
-        <label class="text-[10px] uppercase tracking-[0.1em] text-zinc-500 font-black block mb-2">Primary Skill to Teach</label>
-        <select class="w-full p-4 bg-zinc-50 rounded-xl border border-zinc-100 focus:border-primary/30 focus:bg-white transition-all outline-none text-sm font-medium">
-          <option>UI/UX Design</option>
-          <option>Web Development</option>
-          <option>Data Science</option>
-          <option>Mobile Development</option>
-          <option>Public Speaking</option>
-          <option>Creative Writing</option>
-          <option>Other</option>
-        </select>
-      </div>
-      <div>
-        <label class="text-[10px] uppercase tracking-[0.1em] text-zinc-500 font-black block mb-2">Skill Tags (comma separated)</label>
-        <input class="w-full p-4 bg-zinc-50 rounded-xl border border-zinc-100 focus:border-primary/30 focus:bg-white transition-all outline-none text-sm font-medium" placeholder="React, Figma, TypeScript" />
-      </div>
-      <div>
-        <label class="text-[10px] uppercase tracking-[0.1em] text-zinc-500 font-black block mb-2">Short Bio</label>
-        <textarea class="w-full h-32 p-4 bg-zinc-50 rounded-xl border border-zinc-100 focus:border-primary/30 focus:bg-white transition-all outline-none text-sm font-medium resize-none" placeholder="Tell us about your expertise and passion for teaching..."></textarea>
-      </div>
-    </div>
-  `;
-}
-
-function renderStep2() {
-  return `
-    <h2 class="text-2xl font-black text-zinc-900 mb-8">Teaching Experience</h2>
-    <div class="space-y-6">
-      <div>
-        <label class="text-[10px] uppercase tracking-[0.1em] text-zinc-500 font-black block mb-2">Years of Experience</label>
-        <select class="w-full p-4 bg-zinc-50 rounded-xl border border-zinc-100 focus:border-primary/30 focus:bg-white transition-all outline-none text-sm font-medium">
-          <option>1-2 years</option>
-          <option>3-5 years</option>
-          <option>5-10 years</option>
-          <option>10+ years</option>
-        </select>
-      </div>
-      <div>
-        <label class="text-[10px] uppercase tracking-[0.1em] text-zinc-500 font-black block mb-2">Previous Teaching Experience</label>
-        <textarea class="w-full h-28 p-4 bg-zinc-50 rounded-xl border border-zinc-100 focus:border-primary/30 focus:bg-white transition-all outline-none text-sm font-medium resize-none" placeholder="Describe any previous teaching, mentoring, or coaching experience..."></textarea>
-      </div>
-      <div>
-        <label class="text-[10px] uppercase tracking-[0.1em] text-zinc-500 font-black block mb-2">Demo Session Topic</label>
-        <input class="w-full p-4 bg-zinc-50 rounded-xl border border-zinc-100 focus:border-primary/30 focus:bg-white transition-all outline-none text-sm font-medium" placeholder="e.g., Introduction to Design Systems" />
-      </div>
-      <div>
-        <label class="text-[10px] uppercase tracking-[0.1em] text-zinc-500 font-black block mb-2">Demo Session Description</label>
-        <textarea class="w-full h-28 p-4 bg-zinc-50 rounded-xl border border-zinc-100 focus:border-primary/30 focus:bg-white transition-all outline-none text-sm font-medium resize-none" placeholder="Outline what you would cover in a 30-minute demo session..."></textarea>
-      </div>
-      <div>
-        <label class="text-[10px] uppercase tracking-[0.1em] text-zinc-500 font-black block mb-2">Portfolio / LinkedIn URL</label>
-        <input class="w-full p-4 bg-zinc-50 rounded-xl border border-zinc-100 focus:border-primary/30 focus:bg-white transition-all outline-none text-sm font-medium" placeholder="https://linkedin.com/in/yourname" />
-      </div>
-    </div>
-  `;
-}
-
-function renderStep3() {
-  return `
-    <h2 class="text-2xl font-black text-zinc-900 mb-8">Review & Submit</h2>
-    <div class="space-y-6">
-      <div class="bg-violet-50/50 border border-violet-100 rounded-2xl p-6">
-        <div class="flex items-center gap-3 mb-4">
-          <span class="material-symbols-outlined text-primary">auto_awesome</span>
-          <h3 class="font-black text-primary">What happens next?</h3>
-        </div>
-        <div class="space-y-3 text-sm text-zinc-600 leading-relaxed">
-          <p>1. Our review team will evaluate your application within <strong>2-3 business days</strong>.</p>
-          <p>2. You'll receive a notification about your application status.</p>
-          <p>3. If approved, you'll get <strong>50 bonus credits</strong> and can start listing sessions immediately.</p>
-          <p>4. You earn credits every time a student books your session!</p>
-        </div>
-      </div>
-
-      <div class="bg-zinc-50 rounded-2xl p-6 border border-zinc-100">
-        <h3 class="font-bold text-sm text-zinc-900 mb-4">Application Summary</h3>
-        <div class="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <p class="text-zinc-400 text-xs font-bold uppercase">Name</p>
-            <p class="font-medium">${store.get('user').name}</p>
-          </div>
-          <div>
-            <p class="text-zinc-400 text-xs font-bold uppercase">Email</p>
-            <p class="font-medium">${store.get('user').email}</p>
-          </div>
-          <div>
-            <p class="text-zinc-400 text-xs font-bold uppercase">Role</p>
-            <p class="font-medium">${store.get('user').role}</p>
-          </div>
-          <div>
-            <p class="text-zinc-400 text-xs font-bold uppercase">Level</p>
-            <p class="font-medium">Level ${store.get('user').level}</p>
-          </div>
-        </div>
-      </div>
-
-      <label class="flex items-start gap-3 p-4 rounded-xl hover:bg-zinc-50 transition-colors cursor-pointer">
-        <input type="checkbox" class="mt-1 accent-primary" checked />
-        <span class="text-sm text-zinc-600">I agree to the SkillSwap+ Mentor Guidelines and commit to providing quality educational experiences.</span>
-      </label>
-    </div>
-  `;
 }

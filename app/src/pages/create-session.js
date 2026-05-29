@@ -1,232 +1,111 @@
+/* ═══════════════════════════════════════════
+   SkillSwap+ — Create Session Page
+   Source: Stitch "Create Session | SkillSwap+"
+   ═══════════════════════════════════════════ */
+
+import { getFooterHTML } from '../components/footer.js';
 import { showToast } from '../components/toast.js';
-import { createSession } from '../services/session.service.js';
-
-const categories = [
-  'Programming',
-  'Design',
-  'Marketing',
-  'Data Science',
-  'Languages',
-  'Music',
-  'Writing',
-  'Business',
-  'Photography',
-  'Cooking',
-  'Fitness',
-  'Finance',
-  'Public Speaking',
-  'Leadership',
-  'Other'
-];
-
-function todayValue() {
-  return new Date().toISOString().split('T')[0];
-}
-
-function addMinutes(time, minutesToAdd) {
-  const [hours, minutes] = time.split(':').map(Number);
-  const total = hours * 60 + minutes + minutesToAdd;
-  const endHours = Math.floor(total / 60);
-  const endMinutes = total % 60;
-  if (endHours > 23) return null;
-  return `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
-}
-
-function setFieldError(field, message = '') {
-  const el = document.querySelector(`[data-error-for="${field}"]`);
-  if (el) el.textContent = message;
-}
-
-function readForm() {
-  const title = document.getElementById('session-title').value.trim();
-  const description = document.getElementById('session-description').value.trim();
-  const skillCategory = document.getElementById('session-category').value;
-  const creditsRequired = Number(document.getElementById('session-credits').value);
-  const maxParticipants = Number(document.getElementById('session-participants').value);
-  const duration = Number(document.getElementById('session-duration').value);
-  const date = document.getElementById('session-date').value;
-  const startTime = document.getElementById('session-time').value;
-  const tags = document.getElementById('session-tags').value
-    .split(',')
-    .map(tag => tag.trim())
-    .filter(Boolean)
-    .slice(0, 10);
-  const endTime = startTime ? addMinutes(startTime, duration) : null;
-
-  return { title, description, skillCategory, creditsRequired, maxParticipants, duration, date, startTime, endTime, tags };
-}
-
-function validateForm(data) {
-  let valid = true;
-  ['title', 'description', 'credits', 'participants', 'duration', 'date', 'time', 'tags'].forEach(key => setFieldError(key));
-
-  if (data.title.length < 3) {
-    setFieldError('title', 'Use at least 3 characters.');
-    valid = false;
-  }
-  if (data.description.length < 10) {
-    setFieldError('description', 'Describe what learners will get from the session.');
-    valid = false;
-  }
-  if (!Number.isInteger(data.creditsRequired) || data.creditsRequired < 1 || data.creditsRequired > 100) {
-    setFieldError('credits', 'Credits must be between 1 and 100.');
-    valid = false;
-  }
-  if (!Number.isInteger(data.maxParticipants) || data.maxParticipants < 1 || data.maxParticipants > 20) {
-    setFieldError('participants', 'Participants must be between 1 and 20.');
-    valid = false;
-  }
-  if (!data.date) {
-    setFieldError('date', 'Choose a date.');
-    valid = false;
-  }
-  if (!data.startTime || !data.endTime) {
-    setFieldError('time', 'Choose a start time that ends before midnight.');
-    valid = false;
-  }
-  if (data.date && data.startTime) {
-    const startsAt = new Date(`${data.date}T${data.startTime}:00`);
-    if (startsAt <= new Date()) {
-      setFieldError('time', 'Start time must be in the future.');
-      valid = false;
-    }
-  }
-  if (data.tags.some(tag => tag.length > 30)) {
-    setFieldError('tags', 'Each tag must be 30 characters or fewer.');
-    valid = false;
-  }
-
-  return valid;
-}
 
 export function renderCreateSession(container) {
   container.innerHTML = `
-    <div class="min-h-screen px-4 sm:px-6 lg:px-12 py-12 max-w-[1100px] mx-auto">
-      <div class="mb-10">
-        <nav class="flex items-center gap-2 text-[10px] font-bold text-zinc-400 uppercase tracking-widest mb-4">
-          <a href="#/dashboard" class="hover:text-primary">Dashboard</a>
-          <span class="material-symbols-outlined text-[10px]">chevron_right</span>
-          <span class="text-primary">Create Session</span>
-        </nav>
-        <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6">
-          <div>
-            <h1 class="text-4xl lg:text-5xl font-black tracking-tight text-zinc-900 mb-3">Create a real session.</h1>
-            <p class="text-zinc-500 text-base lg:text-lg max-w-2xl">Publish a session to the marketplace. Learners can request a booking, credits are reserved in escrow, and you get paid after completion.</p>
+    <div class="bg-surface text-ink-black font-body-md">
+      <main class="max-w-[1280px] mx-auto px-margin-desktop py-12">
+        <div class="flex flex-col md:flex-row justify-between items-end gap-gutter mb-12">
+          <div class="max-w-2xl">
+            <h1 class="font-display-lg text-headline-lg uppercase mb-4 leading-tight" style="font-family:'Oswald',sans-serif;">Create a real <span class="text-rust-accent">session.</span></h1>
+            <p class="font-body-lg text-on-surface-variant">Publish a session to the marketplace. Learners can request a booking, credits are reserved in escrow, and you get paid after completion.</p>
           </div>
-          <a href="#/marketplace" class="self-start lg:self-auto bg-white border border-zinc-200 px-5 py-3 rounded-full text-sm font-black text-zinc-700 hover:bg-zinc-50">View Marketplace</a>
+          <a href="#/marketplace" class="bg-paper-base border-2 border-ink-black px-6 py-3 font-headline-sm uppercase shadow-hard hover:bg-surface-container transition-all flex items-center gap-2" style="text-decoration:none;font-family:'Oswald',sans-serif;">VIEW MARKETPLACE <span class="material-symbols-outlined">arrow_forward</span></a>
         </div>
-      </div>
-
-      <form id="create-session-form" class="bg-white rounded-2xl border border-zinc-100 shadow-sm p-5 sm:p-8 lg:p-10 space-y-8">
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <div class="lg:col-span-2">
-            <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2" for="session-title">Session Title</label>
-            <input id="session-title" class="w-full p-4 bg-zinc-50 rounded-xl border border-zinc-100 focus:bg-white focus:border-primary/30 outline-none text-sm font-medium" maxlength="100" placeholder="Intro to React Hooks" required />
-            <p class="text-xs text-red-500 mt-1 min-h-4" data-error-for="title"></p>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-gutter">
+          <div class="lg:col-span-8 bg-paper-base border-2 border-ink-black shadow-hard">
+            <div class="bg-tertiary border-b-2 border-ink-black p-4">
+              <h2 class="font-label-lg text-paper-base uppercase tracking-widest">Session Details</h2>
+            </div>
+            <form class="p-8 space-y-gutter" id="create-session-form">
+              <div class="space-y-2"><label class="font-label-md text-ink-black uppercase block">Session Title</label><input class="w-full bg-paper-base border-2 border-ink-black p-4 font-body-md focus:border-rust-accent focus:outline-none" placeholder="e.g. Masterclass in Industrial Design Systems" required type="text" id="cs-title" /></div>
+              <div class="space-y-2"><label class="font-label-md text-ink-black uppercase block">Description</label><textarea class="w-full bg-paper-base border-2 border-ink-black p-4 font-body-md focus:border-rust-accent focus:outline-none" placeholder="Describe what learners will achieve..." required rows="6" id="cs-desc"></textarea></div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+                <div class="space-y-2"><label class="font-label-md text-ink-black uppercase block">Skill Category</label><select class="w-full bg-paper-base border-2 border-ink-black p-4 font-body-md" id="cs-category"><option>Product Design</option><option>Software Engineering</option><option>Business Strategy</option><option>Art &amp; Craft</option></select></div>
+                <div class="space-y-2"><label class="font-label-md text-ink-black uppercase block">Credits Required</label><div class="relative"><input class="w-full bg-paper-base border-2 border-ink-black p-4 font-body-md pr-12 focus:border-rust-accent focus:outline-none" placeholder="100" type="number" id="cs-credits" /><span class="absolute right-4 top-1/2 -translate-y-1/2 font-label-md opacity-50">CR</span></div></div>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
+                <div class="space-y-2"><label class="font-label-md text-ink-black uppercase block">Date</label><input class="w-full bg-paper-base border-2 border-ink-black p-4 font-body-md focus:border-rust-accent focus:outline-none" type="date" id="cs-date" /></div>
+                <div class="space-y-2"><label class="font-label-md text-ink-black uppercase block">Start Time</label><input class="w-full bg-paper-base border-2 border-ink-black p-4 font-body-md focus:border-rust-accent focus:outline-none" type="time" id="cs-time" /></div>
+                <div class="space-y-2"><label class="font-label-md text-ink-black uppercase block">Duration</label><select class="w-full bg-paper-base border-2 border-ink-black p-4 font-body-md" id="cs-duration"><option value="60">60 Mins</option><option value="90">90 Mins</option><option value="120">2 Hours</option><option value="240">Half Day</option></select></div>
+              </div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
+                <div class="space-y-2"><label class="font-label-md text-ink-black uppercase block">Max Participants</label><input class="w-full bg-paper-base border-2 border-ink-black p-4 font-body-md focus:border-rust-accent focus:outline-none" type="number" value="1" id="cs-max" /></div>
+                <div class="space-y-2"><label class="font-label-md text-ink-black uppercase block">Tags (Comma separated)</label><input class="w-full bg-paper-base border-2 border-ink-black p-4 font-body-md focus:border-rust-accent focus:outline-none" placeholder="industrial, drafting, cad" type="text" id="cs-tags" /></div>
+              </div>
+              <div class="pt-8 border-t-2 border-ink-black flex justify-between items-center">
+                <p class="text-label-md font-label-md max-w-xs opacity-70 italic">By publishing, you agree to the SkillSwap Expert Guidelines.</p>
+                <button class="bg-rust-accent text-paper-base border-2 border-ink-black px-10 py-4 font-headline-sm uppercase shadow-hard hover:translate-x-0.5 hover:translate-y-0.5 transition-all" type="submit" id="cs-submit-btn" style="font-family:'Oswald',sans-serif;">PUBLISH SESSION</button>
+              </div>
+            </form>
           </div>
-
-          <div class="lg:col-span-2">
-            <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2" for="session-description">Description</label>
-            <textarea id="session-description" class="w-full min-h-36 p-4 bg-zinc-50 rounded-xl border border-zinc-100 focus:bg-white focus:border-primary/30 outline-none text-sm font-medium resize-y" maxlength="2000" placeholder="Explain who this is for, what learners will practice, and what they should prepare." required></textarea>
-            <p class="text-xs text-red-500 mt-1 min-h-4" data-error-for="description"></p>
-          </div>
-
-          <div>
-            <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2" for="session-category">Skill Category</label>
-            <select id="session-category" class="w-full p-4 bg-zinc-50 rounded-xl border border-zinc-100 focus:bg-white focus:border-primary/30 outline-none text-sm font-medium">
-              ${categories.map(category => `<option value="${category}">${category}</option>`).join('')}
-            </select>
-          </div>
-
-          <div>
-            <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2" for="session-credits">Credits Required</label>
-            <input id="session-credits" type="number" min="1" max="100" value="5" class="w-full p-4 bg-zinc-50 rounded-xl border border-zinc-100 focus:bg-white focus:border-primary/30 outline-none text-sm font-medium" required />
-            <p class="text-xs text-red-500 mt-1 min-h-4" data-error-for="credits"></p>
-          </div>
-
-          <div>
-            <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2" for="session-date">Date</label>
-            <input id="session-date" type="date" min="${todayValue()}" class="w-full p-4 bg-zinc-50 rounded-xl border border-zinc-100 focus:bg-white focus:border-primary/30 outline-none text-sm font-medium" required />
-            <p class="text-xs text-red-500 mt-1 min-h-4" data-error-for="date"></p>
-          </div>
-
-          <div>
-            <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2" for="session-time">Start Time</label>
-            <input id="session-time" type="time" class="w-full p-4 bg-zinc-50 rounded-xl border border-zinc-100 focus:bg-white focus:border-primary/30 outline-none text-sm font-medium" required />
-            <p class="text-xs text-red-500 mt-1 min-h-4" data-error-for="time"></p>
-          </div>
-
-          <div>
-            <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2" for="session-duration">Duration</label>
-            <select id="session-duration" class="w-full p-4 bg-zinc-50 rounded-xl border border-zinc-100 focus:bg-white focus:border-primary/30 outline-none text-sm font-medium">
-              <option value="30">30 minutes</option>
-              <option value="45">45 minutes</option>
-              <option value="60" selected>60 minutes</option>
-              <option value="90">90 minutes</option>
-              <option value="120">120 minutes</option>
-            </select>
-            <p class="text-xs text-red-500 mt-1 min-h-4" data-error-for="duration"></p>
-          </div>
-
-          <div>
-            <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2" for="session-participants">Max Participants</label>
-            <input id="session-participants" type="number" min="1" max="20" value="1" class="w-full p-4 bg-zinc-50 rounded-xl border border-zinc-100 focus:bg-white focus:border-primary/30 outline-none text-sm font-medium" required />
-            <p class="text-xs text-red-500 mt-1 min-h-4" data-error-for="participants"></p>
-          </div>
-
-          <div class="lg:col-span-2">
-            <label class="block text-[10px] font-black uppercase tracking-widest text-zinc-500 mb-2" for="session-tags">Tags</label>
-            <input id="session-tags" class="w-full p-4 bg-zinc-50 rounded-xl border border-zinc-100 focus:bg-white focus:border-primary/30 outline-none text-sm font-medium" placeholder="React, Hooks, Frontend" />
-            <p class="text-xs text-zinc-400 mt-1">Comma-separated, up to 10 tags.</p>
-            <p class="text-xs text-red-500 mt-1 min-h-4" data-error-for="tags"></p>
+          <div class="lg:col-span-4 space-y-gutter">
+            <div class="bg-paper-base border-2 border-ink-black shadow-hard overflow-hidden">
+              <div class="h-48 bg-surface-variant relative">
+                <img alt="Session preview" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4Eyc_dBAun3g_yuFj3c0z9XfnsF5nhcImg3X4_skfK9uKqbYjQljTFu1l-Cnv7q49Z_oKHAneWDRh5yRjNfY7X3edBu53R5Tq8FMfMSSRpZ4n_fwjvZooqGPc_aMYwwgRoNZuhSvpjat7VtY_cP3SE6_0RdUehltaRUtimojA6yokNnIZ8cnThu7vWF0oAtzAbEvQm2dp8E7ezHe_KAmFycGA1lubX2wJ306_v6r9l3kgXk4UBG9n4-FaWRo5F-EaCkCtRtcnxY0" />
+                <div class="absolute top-4 right-4 bg-rust-accent text-paper-base px-3 py-1 font-label-md border-2 border-ink-black">PREVIEW</div>
+              </div>
+              <div class="p-6 space-y-4">
+                <div class="flex gap-2"><span class="bg-primary-fixed border border-ink-black px-2 py-0.5 text-label-md font-label-md uppercase">Design</span><span class="bg-secondary-fixed border border-ink-black px-2 py-0.5 text-label-md font-label-md uppercase">Expert</span></div>
+                <h3 class="font-headline-sm uppercase leading-tight" id="cs-preview-title" style="font-family:'Oswald',sans-serif;">Session Preview Title</h3>
+                <div class="flex items-center gap-2 text-label-lg font-label-lg border-y border-ink-black py-3"><span class="material-symbols-outlined">schedule</span><span>PENDING TIME</span><span class="mx-auto"></span><span class="text-rust-accent font-bold" id="cs-preview-credits">100 CREDITS</span></div>
+                <div class="flex items-center gap-3"><div class="w-10 h-10 rounded-full border-2 border-ink-black bg-surface-container"></div><span class="font-label-lg">YOU (EXPERT)</span></div>
+              </div>
+              <div class="bg-tertiary-fixed border-t-2 border-ink-black p-4"><div class="flex justify-between items-center text-label-md font-label-md"><span>REVENUE POTENTIAL</span><span class="font-bold">85 - 850 TKN</span></div></div>
+            </div>
+            <div class="bg-paper-base border-2 border-ink-black p-6 space-y-4">
+              <h4 class="font-headline-sm uppercase border-b-2 border-ink-black pb-2" style="font-family:'Oswald',sans-serif;">Session Tips</h4>
+              <ul class="space-y-3 font-body-md">
+                <li class="flex gap-3"><span class="w-2 h-2 bg-rust-accent mt-2 shrink-0"></span><span>Keep your title descriptive but concise (under 60 characters).</span></li>
+                <li class="flex gap-3"><span class="w-2 h-2 bg-rust-accent mt-2 shrink-0"></span><span>Upload a high-quality thumbnail image to increase click-through by 40%.</span></li>
+                <li class="flex gap-3"><span class="w-2 h-2 bg-rust-accent mt-2 shrink-0"></span><span>Clearly state the prerequisites in the description.</span></li>
+              </ul>
+            </div>
           </div>
         </div>
-
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2 border-t border-zinc-100">
-          <p class="text-xs text-zinc-500">Once published, learners can reserve credits and request your approval.</p>
-          <button id="create-session-submit" type="submit" class="bg-primary text-white px-8 py-4 rounded-full text-sm font-black shadow-lg shadow-primary/20 disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2">
-            <span class="material-symbols-outlined text-sm">add_circle</span>
-            Publish Session
-          </button>
-        </div>
-      </form>
+      </main>
+      ${getFooterHTML()}
     </div>
   `;
 
-  document.getElementById('create-session-form')?.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    const data = readForm();
-    if (!validateForm(data)) {
-      showToast('Please fix the highlighted fields.', 'warning');
-      return;
-    }
+  // Live preview sync
+  const titleInput = document.getElementById('cs-title');
+  const previewTitle = document.getElementById('cs-preview-title');
+  const creditsInput = document.getElementById('cs-credits');
+  const previewCredits = document.getElementById('cs-preview-credits');
 
-    const btn = document.getElementById('create-session-submit');
-    const original = btn.innerHTML;
-    btn.disabled = true;
-    btn.setAttribute('aria-busy', 'true');
-    btn.innerHTML = '<span class="material-symbols-outlined animate-spin text-sm">refresh</span> Publishing...';
+  titleInput?.addEventListener('input', (e) => { if (previewTitle) previewTitle.textContent = e.target.value || 'Session Preview Title'; });
+  creditsInput?.addEventListener('input', (e) => { if (previewCredits) previewCredits.textContent = (e.target.value || '100') + ' CREDITS'; });
 
+  // Form submit
+  document.getElementById('create-session-form')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('cs-submit-btn');
+    btn.disabled = true; btn.textContent = 'PUBLISHING...';
     try {
-      await createSession({
-        title: data.title,
-        description: data.description,
-        skillCategory: data.skillCategory,
-        date: data.date,
-        startTime: data.startTime,
-        endTime: data.endTime,
-        creditsRequired: data.creditsRequired,
-        maxParticipants: data.maxParticipants,
-        tags: data.tags
+      const { createSession } = await import('../services/session.service.js');
+      const res = await createSession({
+        title: titleInput.value, description: document.getElementById('cs-desc').value,
+        category: document.getElementById('cs-category').value, creditsRequired: Number(creditsInput.value),
+        date: document.getElementById('cs-date').value, time: document.getElementById('cs-time').value,
+        duration: Number(document.getElementById('cs-duration').value),
+        maxParticipants: Number(document.getElementById('cs-max').value),
+        tags: document.getElementById('cs-tags').value.split(',').map(t => t.trim()).filter(Boolean)
       });
+      if (res && !res.error) { showToast('Session published!', 'success'); window.location.hash = '/marketplace'; }
+      else showToast(res?.message || 'Failed to create session', 'error');
+    } catch (err) { showToast(err.message || 'Network error', 'error'); }
+    finally { btn.disabled = false; btn.textContent = 'PUBLISH SESSION'; }
+  });
 
-      showToast('Session published to the marketplace.', 'success');
-      window.location.hash = '#/dashboard';
-    } catch (err) {
-      showToast(err.message || 'Failed to create session.', 'error');
-      btn.disabled = false;
-      btn.removeAttribute('aria-busy');
-      btn.innerHTML = original;
-    }
+  // Label focus effect
+  container.querySelectorAll('input, select, textarea').forEach(input => {
+    input.addEventListener('focus', () => { const label = input.closest('.space-y-2')?.querySelector('label'); if (label) label.classList.add('text-rust-accent'); });
+    input.addEventListener('blur', () => { const label = input.closest('.space-y-2')?.querySelector('label'); if (label) label.classList.remove('text-rust-accent'); });
   });
 }

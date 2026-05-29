@@ -9,7 +9,7 @@
     content="SkillSwap+ is a peer-to-peer skill exchange platform. Earn credits by teaching and spend them to learn. No money involved." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Oswald:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
   <link
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
     rel="stylesheet" />
@@ -21,45 +21,95 @@
       theme: {
         extend: {
           colors: {
-            "on-tertiary": "#ffffff",
-            "on-primary": "#ffffff",
-            "on-surface-variant": "#494456",
-            "primary-fixed": "#e8ddff",
-            "background": "#fcf9f8",
-            "on-error": "#ffffff",
-            "surface-variant": "#e5e2e1",
-            "error-container": "#ffdad6",
-            "surface-dim": "#dcd9d9",
-            "surface-container": "#f0edec",
-            "primary": "#5000c8",
-            "primary-container": "#6927ef",
-            "outline": "#7a7488",
-            "on-primary-container": "#dcceff",
-            "on-surface": "#1c1b1b",
-            "on-background": "#1c1b1b",
-            "surface-container-highest": "#e5e2e1",
-            "on-secondary": "#ffffff",
-            "surface-container-lowest": "#ffffff",
-            "secondary": "#006782",
-            "surface-tint": "#6b2bf1",
+            "surface-container-highest": "#f3dfcf",
+            "secondary-fixed-dim": "#97d59d",
+            "inverse-surface": "#3a2e24",
+            "on-primary-container": "#ffeae4",
+            "on-secondary-fixed": "#002109",
+            "surface-container-low": "#fff1e7",
             "error": "#ba1a1a",
-            "surface-container-low": "#f6f3f2",
-            "surface-container-high": "#ebe7e7",
-            "secondary-container": "#39cdfd",
-            "outline-variant": "#cbc3d9",
-            "surface": "#fcf9f8",
-            "tertiary-container": "#5c5c5c"
+            "on-primary": "#ffffff",
+            "primary": "#953300",
+            "primary-container": "#b84915",
+            "on-primary-fixed": "#370e00",
+            "secondary-fixed": "#b2f2b7",
+            "on-error": "#ffffff",
+            "ink-black": "#1A1108",
+            "tertiary-container": "#746c56",
+            "surface": "#fff8f4",
+            "deep-forest": "#1F5A2E",
+            "on-background": "#231a10",
+            "rust-accent": "#B84915",
+            "on-tertiary-fixed-variant": "#4d4632",
+            "surface-container": "#feeada",
+            "tertiary-fixed": "#ede2c7",
+            "secondary-container": "#b2f2b7",
+            "outline": "#8b7168",
+            "tertiary": "#5b543f",
+            "on-secondary-fixed-variant": "#155126",
+            "secondary": "#306a3c",
+            "error-container": "#ffdad6",
+            "surface-variant": "#f3dfcf",
+            "on-surface": "#231a10",
+            "surface-container-high": "#f8e5d5",
+            "background": "#fff8f4",
+            "inverse-on-surface": "#ffeee0",
+            "surface-dim": "#ead7c7",
+            "outline-variant": "#dfc0b5",
+            "surface-bright": "#fff8f4",
+            "tertiary-fixed-dim": "#d0c6ac",
+            "primary-fixed-dim": "#ffb599",
+            "paper-base": "#F4EBD7",
+            "inverse-primary": "#ffb599",
+            "on-surface-variant": "#58423a",
+            "on-secondary": "#ffffff",
+            "surface-tint": "#a53c05",
+            "on-tertiary-fixed": "#201b0b",
+            "on-tertiary": "#ffffff",
+            "on-tertiary-container": "#faeed3",
+            "on-primary-fixed-variant": "#7f2b00",
+            "primary-fixed": "#ffdbce",
+            "surface-container-lowest": "#ffffff",
+            "on-error-container": "#93000a",
+            "on-secondary-container": "#367042"
           },
           borderRadius: {
-            DEFAULT: "1rem",
-            lg: "2rem",
-            xl: "3rem",
-            full: "9999px"
+            "DEFAULT": "0.125rem",
+            "lg": "0.25rem",
+            "xl": "0.5rem",
+            "full": "0.75rem"
+          },
+          spacing: {
+            "margin-mobile": "16px",
+            "margin-desktop": "40px",
+            "gutter": "24px",
+            "container-max": "1280px",
+            "base": "8px"
           },
           fontFamily: {
-            headline: ["Inter"],
-            body: ["Inter"],
-            label: ["Inter"]
+            "label-md": ["JetBrains Mono"],
+            "headline-sm": ["Oswald"],
+            "headline-md": ["Oswald"],
+            "headline-lg-mobile": ["Oswald"],
+            "body-lg": ["Inter"],
+            "label-lg": ["JetBrains Mono"],
+            "display-lg": ["Oswald"],
+            "body-md": ["Inter"],
+            "headline-lg": ["Oswald"],
+            "display-xl": ["Oswald"],
+            "code-snippet": ["JetBrains Mono"]
+          },
+          fontSize: {
+            "display-xl": ["96px", { "lineHeight": "104px", "letterSpacing": "-0.03em", "fontWeight": "700" }],
+            "display-lg": ["72px", { "lineHeight": "80px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+            "headline-lg": ["48px", { "lineHeight": "56px", "fontWeight": "600" }],
+            "headline-lg-mobile": ["36px", { "lineHeight": "44px", "fontWeight": "600" }],
+            "headline-md": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+            "headline-sm": ["24px", { "lineHeight": "32px", "fontWeight": "500" }],
+            "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+            "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+            "label-lg": ["14px", { "lineHeight": "20px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500" }]
           }
         }
       }
@@ -68,18 +118,15 @@
   <link rel="stylesheet" href="/src/styles/main.css" />
 </head>
 
-<body
-  class="bg-background text-on-surface font-body antialiased selection:bg-primary-container selection:text-on-primary-container overflow-x-hidden">
+<body class="bg-surface text-ink-black font-body-md selection:bg-rust-accent selection:text-paper-base overflow-x-clip">
   <a href="#page-content" class="skip-link">Skip to main content</a>
   <div id="app">
-    <div id="layout" class="relative group">
-      <aside id="sidebar"
-        class="h-screen w-72 fixed left-0 top-0 bg-[#f6f3f2] flex flex-col z-50 transition-transform -translate-x-full lg:translate-x-0">
-      </aside>
-      <header id="persistent-header"
-        class="sticky top-0 w-full z-40 bg-[#fcf9f8]/70 backdrop-blur-xl flex justify-between items-center px-8 py-4 shadow-[0_20px_40px_rgba(28,27,27,0.03)] border-b border-zinc-100 hidden">
+    <div id="layout" class="relative">
+      <!-- Persistent Header (hidden on landing, shown on internal pages) -->
+      <header id="persistent-header" class="sticky top-0 z-50 bg-paper-base border-b-2 border-ink-black hidden">
       </header>
-      <main id="page-content" class="min-h-screen transition-all lg:ml-72" tabindex="-1"></main>
+      <!-- Main Content -->
+      <main id="page-content" class="min-h-screen transition-all" tabindex="-1"></main>
     </div>
   </div>
   <div id="toast-container" class="fixed top-6 right-6 z-[200] flex flex-col gap-3" aria-live="polite" aria-atomic="true"></div>
