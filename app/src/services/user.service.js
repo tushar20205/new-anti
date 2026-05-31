@@ -36,3 +36,28 @@ export async function getUserById(id) {
   if (res.error) return null;
   return res.data?.data?.user || null;
 }
+
+/**
+ * Upload profile picture avatar.
+ * @param {File} file
+ */
+export async function uploadProfilePicture(file) {
+  const formData = new FormData();
+  formData.append('avatar', file);
+  const res = await api.post('/users/profile/avatar', formData);
+  if (res.error) throw new Error(res.message);
+  return res.data?.data?.profilePicture || null;
+}
+
+/**
+ * Apply to become a mentor (saved locally since backend has no endpoint).
+ * @param {Object} data
+ */
+export async function applyMentor(data) {
+  localStorage.setItem('mentor_application', JSON.stringify({
+    ...data,
+    status: 'pending',
+    appliedAt: new Date().toISOString()
+  }));
+  return { status: 'success' };
+}
