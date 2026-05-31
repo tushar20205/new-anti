@@ -110,7 +110,9 @@ export function renderSettings(container) {
     e.preventDefault();
     try {
       const { updateProfile } = await import('../services/user.service.js');
+      const { fetchProfile } = await import('../services/data.layer.js');
       await updateProfile({ name: document.getElementById('settings-name').value, bio: document.getElementById('settings-bio').value });
+      await fetchProfile();
       showToast('Settings saved!', 'success');
     } catch (err) { showToast(err.message || 'Failed to save', 'error'); }
   });

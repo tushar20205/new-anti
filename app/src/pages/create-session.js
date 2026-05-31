@@ -26,7 +26,7 @@ export function renderCreateSession(container) {
               <div class="space-y-2"><label class="font-label-md text-ink-black uppercase block">Session Title</label><input class="w-full bg-paper-base border-2 border-ink-black p-4 font-body-md focus:border-rust-accent focus:outline-none" placeholder="e.g. Masterclass in Industrial Design Systems" required type="text" id="cs-title" /></div>
               <div class="space-y-2"><label class="font-label-md text-ink-black uppercase block">Description</label><textarea class="w-full bg-paper-base border-2 border-ink-black p-4 font-body-md focus:border-rust-accent focus:outline-none" placeholder="Describe what learners will achieve..." required rows="6" id="cs-desc"></textarea></div>
               <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter">
-                <div class="space-y-2"><label class="font-label-md text-ink-black uppercase block">Skill Category</label><select class="w-full bg-paper-base border-2 border-ink-black p-4 font-body-md" id="cs-category"><option>Product Design</option><option>Software Engineering</option><option>Business Strategy</option><option>Art &amp; Craft</option></select></div>
+                <div class="space-y-2"><label class="font-label-md text-ink-black uppercase block">Skill Category</label><select class="w-full bg-paper-base border-2 border-ink-black p-4 font-body-md" id="cs-category"><option value="Design">Design</option><option value="Programming">Programming</option><option value="Marketing">Marketing</option><option value="Business">Business</option><option value="Other">Other</option></select></div>
                 <div class="space-y-2"><label class="font-label-md text-ink-black uppercase block">Credits Required</label><div class="relative"><input class="w-full bg-paper-base border-2 border-ink-black p-4 font-body-md pr-12 focus:border-rust-accent focus:outline-none" placeholder="100" type="number" id="cs-credits" /><span class="absolute right-4 top-1/2 -translate-y-1/2 font-label-md opacity-50">CR</span></div></div>
               </div>
               <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter">
@@ -89,18 +89,34 @@ export function renderCreateSession(container) {
     btn.disabled = true; btn.textContent = 'PUBLISHING...';
     try {
       const { createSession } = await import('../services/session.service.js');
+      
+      const startTimeVal = document.getElementById('cs-time').value;
+      const durationVal = Number(document.getElementById('cs-duration').value);
+      const [hours, minutes] = startTimeVal.split(':').map(Number);
+      const startMinutes = hours * 60 + minutes;
+      const endMinutes = startMinutes + durationVal;
+      const endHours = Math.floor(endMinutes / 60) % 24;
+      const endMins = endMinutes % 60;
+      const endTimeVal = `${String(endHours).padStart(2, '0')}:${String(endMins).padStart(2, '0')}`;
+
       const res = await createSession({
-        title: titleInput.value, description: document.getElementById('cs-desc').value,
-        category: document.getElementById('cs-category').value, creditsRequired: Number(creditsInput.value),
-        date: document.getElementById('cs-date').value, time: document.getElementById('cs-time').value,
-        duration: Number(document.getElementById('cs-duration').value),
+        title: titleInput.value,
+        description: document.getElementById('cs-desc').value,
+        skillCategory: document.getElementById('cs-category').value,
+        creditsRequired: Number(creditsInput.value),
+        date: document.getElementById('cs-date').value,
+        startTime: startTimeVal,
+        endTime: endTimeVal,
         maxParticipants: Number(document.getElementById('cs-max').value),
         tags: document.getElementById('cs-tags').value.split(',').map(t => t.trim()).filter(Boolean)
       });
-      if (res && !res.error) { showToast('Session published!', 'success'); window.location.hash = '/marketplace'; }
-      else showToast(res?.message || 'Failed to create session', 'error');
-    } catch (err) { showToast(err.message || 'Network error', 'error'); }
-    finally { btn.disabled = false; btn.textContent = 'PUBLISH SESSION'; }
+      showToast('Session published!', 'success');
+      window.location.hash = '/marketplace';
+    } catch (err) {
+      showToast(err.message || 'Failed to create session', 'error');
+    } finally {
+      btn.disabled = false; btn.textContent = 'PUBLISH SESSION';
+    }
   });
 
   // Label focus effect

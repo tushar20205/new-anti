@@ -68,3 +68,15 @@ export async function getProfileCompletion() {
   if (res.error) return null;
   return res.data?.data?.completion || null;
 }
+
+export async function createReview(data) {
+  const res = await api.post('/reviews', data);
+  if (res.error) throw new Error(res.message);
+  return res.data?.data?.review || null;
+}
+
+export async function getReviewsForUser(userId) {
+  const res = await api.get(`/reviews/user/${userId}`);
+  if (res.error) return [];
+  return res.data?.data?.reviews || [];
+}

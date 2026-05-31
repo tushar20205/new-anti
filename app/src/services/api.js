@@ -35,8 +35,10 @@ async function apiFetch(endpoint, options = {}) {
   const token = localStorage.getItem('token');
   const { signal, timeoutId } = createRequestSignal(options.signal);
 
+  const isFormData = options.body instanceof FormData;
+
   const headers = {
-    'Content-Type': 'application/json',
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...options.headers
   };
 
@@ -52,8 +54,8 @@ async function apiFetch(endpoint, options = {}) {
     signal
   };
 
-  // If body is an object, stringify it
-  if (config.body && typeof config.body === 'object') {
+  // If body is an object and not FormData, stringify it
+  if (config.body && typeof config.body === 'object' && !(config.body instanceof FormData)) {
     config.body = JSON.stringify(config.body);
   }
 
